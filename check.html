@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lösungs-Check – Energieflussdiagramme</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F2A44; --blue:#3B6FB6; --green:#2E9E5B; --heat:#E4572E; --marker:#FFD447;
+  --paper:#FFFFFF; --grid:#DCE7F5; --muted:#5C6780; --line:#C9D3E3;
+  --ok-bg:#E3F4EA; --bad-bg:#FDE8E2;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; color:var(--ink); font:16px/1.5 "Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-family:"Patrick Hand","Comic Sans MS",cursive;font-weight:400;font-size:2.4rem;line-height:1.1;margin:8px 0 4px}
+.sub{color:var(--muted);margin:0 0 18px}
+nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;
+  background:rgba(255,255,255,.94);padding-top:8px;margin:0 -16px;padding-left:16px;padding-right:16px;border-bottom:2px solid var(--ink)}
+nav button{flex:0 0 auto;border:2px solid var(--ink);background:#fff;color:var(--ink);border-radius:10px;padding:6px 12px 4px;
+  font:700 15px "Nunito",sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px}
+nav button[aria-selected="true"]{background:var(--ink);color:#fff}
+nav button.done{border-color:var(--green)}
+nav button.done .nr::after{content:" ✓";color:var(--green)}
+nav button[aria-selected="true"].done .nr::after{color:#9BE3B7}
+.dots{display:flex;gap:3px}
+.dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;display:block}
+.dots i.f{background:currentColor}
+section.task{display:none;margin-top:20px}
+section.task.active{display:block}
+.card{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:18px 18px 14px;margin-bottom:16px;box-shadow:4px 4px 0 var(--ink)}
+.card h2{font-family:"Patrick Hand",cursive;font-weight:400;font-size:1.7rem;margin:0 0 6px;line-height:1.15}
+.card h3{font-size:1rem;margin:14px 0 6px}
+.intro{color:var(--muted);margin:0 0 10px}
+.field{display:grid;grid-template-columns:1fr minmax(150px,46%) 28px;gap:10px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}
+.field:first-of-type{border-top:0}
+.field label{font-weight:700}
+.field small{display:block;font-weight:400;color:var(--muted)}
+select,input[type=text],textarea{width:100%;font:16px "Nunito",sans-serif;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff}
+select:focus,input:focus,textarea:focus{outline:3px solid var(--marker);border-color:var(--ink)}
+.field.ok select,.field.ok input{border-color:var(--green);background:var(--ok-bg)}
+.field.bad select,.field.bad input{border-color:var(--heat);background:var(--bad-bg)}
+.mark{font-size:20px;text-align:center}
+.help{grid-column:1/-1;font-size:.93rem;background:#FFF8D6;border-left:4px solid var(--marker);padding:6px 10px;border-radius:4px;display:none}
+.help.show{display:block}
+.help button{border:0;background:none;color:var(--blue);font:700 .93rem "Nunito",sans-serif;text-decoration:underline;cursor:pointer;padding:0;margin-left:4px}
+.reveal{grid-column:1/-1;font-size:.93rem;color:var(--muted);display:none}
+.reveal.show{display:block}
+.mc label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:2px solid var(--line);border-radius:8px;margin:6px 0;cursor:pointer;font-weight:400}
+.mc label:has(input:checked){border-color:var(--ink)}
+.mc.ok label:has(input:checked){border-color:var(--green);background:var(--ok-bg)}
+.mc.bad label:has(input:checked){border-color:var(--heat);background:var(--bad-bg)}
+.mc input{margin-top:5px;accent-color:var(--ink)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.btn{border:2px solid var(--ink);background:var(--marker);color:var(--ink);font:800 16px "Nunito",sans-serif;padding:9px 18px;border-radius:10px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:#fff;box-shadow:none;font-weight:700}
+.btn:focus-visible,nav button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.result{font-weight:700}
+.muster{display:none;margin-top:10px;background:var(--ok-bg);border:2px solid var(--green);border-radius:8px;padding:10px 12px}
+.muster.show{display:block}
+.muster b{color:var(--green)}
+textarea{min-height:76px;resize:vertical}
+.lvl{display:inline-flex;gap:3px;vertical-align:middle;margin-left:6px}
+.lvl i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink);display:block}
+.lvl i.f{background:var(--ink)}
+.note{font-size:.93rem;color:var(--muted)}
+a{color:var(--blue)}
+.foot{margin-top:28px;font-size:.88rem;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:560px){
+  .field{grid-template-columns:1fr 28px}
+  .field .ctl{grid-column:1/2}
+  .field label{grid-column:1/-1}
+  h1{font-size:2rem}
+}
+@media (prefers-reduced-motion:no-preference){
+  .field.ok .mark{animation:pop .25s ease-out}
+  @keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lösungs-Check</h1>
+  <p class="sub">Energieflussdiagramme – wähle die Aufgabe, trage deine Ergebnisse ein und tippe auf „Prüfen“. Bei Fehlern bekommst du einen Tipp.</p>
+  <nav id="tabs" role="tablist"></nav>
+  <main id="main"></main>
+  <div class="foot">
+    <span>Dein Fortschritt wird nur auf diesem Gerät gespeichert.</span>
+    <span><a href="labor.html">Zum Energiefluss-Labor</a> · <button class="btn ghost" id="reset" style="padding:4px 10px;font-size:.88rem">Alles zurücksetzen</button></span>
+  </div>
+</div>
+
+<script>
+const E = ["elektrische Energie","chemische Energie","kinetische Energie","Strahlungsenergie (Licht)","Wärme (thermische Energie)"];
+const EL=E[0], CH=E[1], KI=E[2], ST=E[3], WA=E[4];
+
+const TASKS = [
+ { nr:1, lvl:1, title:"Ein Diagramm lesen: die LED-Lampe",
+   intro:"Welche Energieform gehört in welches Kästchen? Wie groß ist der fehlende Wert?",
+   groups:[{fields:[
+     {id:"a1_in", type:"select", label:"Kästchen links (100 J)", options:E, answer:EL,
+      hint:"Womit wird eine Lampe betrieben? Sie steckt in der Steckdose."},
+     {id:"a1_use", type:"select", label:"Kästchen rechts (35 J)", options:E, answer:ST,
+      hint:"Was soll eine Lampe machen? Das ist die Nutzenergie."},
+     {id:"a1_loss", type:"select", label:"Kästchen unten", options:E, answer:WA,
+      hint:"Fass eine Lampe an, die lange brennt. Was spürst du?"},
+     {id:"a1_val", type:"number", label:"Fehlender Wert unten", unit:"J", answer:65,
+      hint:"Was hineinfließt, muss auch hinausfließen: 100 J = 35 J + ? J"}
+   ]}],
+   texts:[{id:"a1_b", prompt:"b) Welche Lampe ist besser? Schreib deine Begründung hier ab und vergleiche sie mit der Musterlösung.",
+     muster:"Die LED-Lampe ist besser. Von 100 J macht sie 35 J Licht, die Glühlampe nur 5 J. Die LED gibt also viel weniger Energie als Wärme ab."}]
+ },
+ { nr:2, lvl:1, title:"Welche Energie fließt wohin?",
+   intro:"Wähle für jedes Gerät die drei Energieformen.",
+   groups:[
+    ["Bohrmaschine (Elektromotor)",[EL,KI,WA],["Sie hat ein Kabel.","Der Bohrer dreht sich – das ist Bewegung.","Nach dem Bohren ist der Bohrer heiß."]],
+    ["Automotor (Benzin)",[CH,KI,WA],["Benzin ist ein Brennstoff, in ihm steckt Energie wie in Nahrung.","Das Auto soll fahren.","Ein Motor wird sehr heiß."]],
+    ["Solarzelle",[ST,EL,WA],["Woher bekommt eine Solarzelle ihre Energie?","Mit der Solarzelle lädt man zum Beispiel einen Akku.","Solarzellen in der Sonne werden warm."]],
+    ["Wasserkocher",[EL,WA,WA],["Er steht auf einem Sockel mit Kabel.","Das Wasser soll heiß werden. Welche Energieform ist das?","Auch das Gehäuse und die Luft werden warm."]],
+    ["Fahrraddynamo",[KI,EL,WA],["Das Rad dreht den Dynamo.","Der Dynamo versorgt die Fahrradlampe.","Reibung erzeugt immer …"]],
+    ["Mensch beim Radfahren",[CH,KI,WA],["Woher hast du deine Energie? Denk an dein Frühstück.","Du willst vorwärtskommen.","Beim Radfahren kommst du ins Schwitzen."]]
+   ].map(([name,ans,h],i)=>({title:name, fields:[
+     {id:`a2_${i}_in`, type:"select", label:"zugeführte Energie", options:E, answer:ans[0], hint:h[0]},
+     {id:`a2_${i}_use`, type:"select", label:"Nutzenergie", options:E, answer:ans[1], hint:h[1]},
+     {id:`a2_${i}_loss`, type:"select", label:"entwertete Energie", options:E, answer:ans[2], hint:h[2]}
+   ]}))
+ },
+ { nr:3, lvl:1, title:"Stimmt das?",
+   intro:"Ein Erfinder behauptet: „Mein Motor macht aus 100 J elektrischer Energie 110 J Bewegungsenergie.“",
+   groups:[{fields:[
+     {id:"a3_mc", type:"mc", label:"Was stimmt?", options:[
+       "Das ist möglich, wenn der Motor besonders gut gebaut ist.",
+       "Das ist unmöglich, weil Energie nicht erzeugt werden kann.",
+       "Das ist unmöglich, weil Motoren keine Bewegungsenergie abgeben.",
+       "Das ist möglich, weil der Motor zusätzlich Wärme in Bewegung umwandelt."], answer:1,
+      hint:"Lies noch einmal den Energieerhaltungssatz: Kann Energie erzeugt werden?"}
+   ]}],
+   texts:[{id:"a3_t", prompt:"Schreib deine Begründung hier ab und vergleiche sie mit der Musterlösung.",
+     muster:"Das ist unmöglich. Energie kann weder erzeugt noch vernichtet werden. Aus 100 J können also höchstens 100 J werden. Weil bei jedem Motor durch Reibung Wärme entsteht, ist die Bewegungsenergie sogar kleiner als 100 J."}]
+ },
+ { nr:4, lvl:1, title:"Fehlende Werte berechnen",
+   intro:"Trage zuerst die fehlenden Werte aus den Spalten 2 bis 4 ein. Die zweite Gruppe ist für Niveau ●● und ●●●.",
+   groups:[
+    {title:"Fehlende Werte", fields:[
+      {id:"a4_a", type:"number", label:"a) Bohrmaschine: entwertete Energie", unit:"J", answer:50, hint:"200 J = 150 J + ?"},
+      {id:"a4_b", type:"number", label:"b) Automotor: Nutzenergie", unit:"J", answer:100, hint:"400 J = ? + 300 J"},
+      {id:"a4_c", type:"number", label:"c) Solarzelle: zugeführte Energie", unit:"J", answer:200, hint:"Zugeführt ist alles zusammen: 40 J + 160 J"},
+      {id:"a4_d", type:"number", label:"d) Wasserkocher: Nutzenergie", unit:"J", answer:450, hint:"500 J = ? + 50 J"},
+      {id:"a4_e", type:"number", label:"e) Fahrraddynamo: entwertete Energie", unit:"J", answer:20, hint:"50 J = 30 J + ?"}
+    ]},
+    {title:"Von 100 J werden genutzt", lvl:2, fields:[
+      {id:"a4_pa", type:"number", label:"a) Bohrmaschine", unit:"J", answer:75, hint:"200 J sind 2-mal 100 J. Also teilst du 150 J durch 2."},
+      {id:"a4_pb", type:"number", label:"b) Automotor", unit:"J", answer:25, hint:"400 J sind 4-mal 100 J. Teile die Nutzenergie durch 4."},
+      {id:"a4_pc", type:"number", label:"c) Solarzelle", unit:"J", answer:20, hint:"200 J sind 2-mal 100 J. Teile 40 J durch 2."},
+      {id:"a4_pd", type:"number", label:"d) Wasserkocher", unit:"J", answer:90, hint:"500 J sind 5-mal 100 J. Teile die Nutzenergie durch 5."},
+      {id:"a4_pe", type:"number", label:"e) Fahrraddynamo", unit:"J", answer:60, hint:"50 J sind die Hälfte von 100 J. Also musst du 30 J verdoppeln."}
+    ]}
+   ]
+ },
+ { nr:5, lvl:2, title:"Selbst zeichnen: der Fahrraddynamo",
+   intro:"1 Kästchen Pfeilbreite = 10 J. Wie breit sind deine Pfeile? Kontrolliere deine Zeichnung zusätzlich im Energiefluss-Labor (Gerät „Fahrraddynamo“, Raster einschalten).",
+   groups:[
+    {fields:[
+      {id:"a5_in", type:"number", label:"Eingangspfeil (kinetische Energie)", unit:"Kästchen", answer:10, hint:"100 J und 1 Kästchen = 10 J. Wie oft passt 10 in 100?"},
+      {id:"a5_use", type:"number", label:"Pfeil geradeaus (elektrische Energie)", unit:"Kästchen", answer:6, hint:"60 J : 10 J"},
+      {id:"a5_loss", type:"number", label:"Pfeil nach unten (Wärme)", unit:"Kästchen", answer:4, hint:"Zuerst die Wärme ausrechnen: 100 J − 60 J. Dann durch 10 J teilen."},
+      {id:"a5_dir", type:"mc", label:"Wohin zeigt der Wärme-Pfeil?", options:["geradeaus nach rechts","nach unten","zurück nach links"], answer:1,
+       hint:"Schau dir das Beispiel der Glühlampe im Infokasten an."}
+    ]},
+    {title:"Zusatz: Automotor", lvl:3, fields:[
+      {id:"a5_zu", type:"number", label:"Pfeil geradeaus (kinetische Energie)", unit:"Kästchen", answer:2.5, hint:"Von 100 J nutzt der Automotor 25 J (Aufgabe 4). 25 J : 10 J = ?"},
+      {id:"a5_zl", type:"number", label:"Pfeil nach unten (Wärme)", unit:"Kästchen", answer:7.5, hint:"100 J − 25 J = 75 J. Wie viele Kästchen sind das?"}
+    ]}
+   ]
+ },
+ { nr:6, lvl:2, title:"Rangliste der Geräte",
+   intro:"Wähle für jeden Platz das passende Gerät. Platz 1 nutzt von 100 J am meisten.",
+   groups:[{fields:["Wasserkocher","Bohrmaschine","Fahrraddynamo","LED-Lampe","Automotor","Solarzelle","Glühlampe"].map((d,i,arr)=>({
+     id:`a6_${i}`, type:"select", label:`Platz ${i+1}`,
+     options:["Automotor","Bohrmaschine","Fahrraddynamo","Glühlampe","LED-Lampe","Solarzelle","Wasserkocher"], answer:d,
+     hint:"Nimm deine Werte aus der letzten Spalte von Aufgabe 4 und dazu Glühlampe (5 J) und LED (35 J). Sortiere von groß nach klein."}))}],
+   texts:[
+     {id:"a6_b", prompt:"b) Warum dürfen Glühlampen nicht mehr verkauft werden?",
+      muster:"Die Glühlampe nutzt von 100 J nur 5 J. Sie ist das schlechteste Gerät der Liste. Eine LED macht aus der gleichen Energie 7-mal so viel Licht. Mit LEDs spart man also viel Energie."},
+     {id:"a6_c", prompt:"c) Warum zählt beim Wasserkocher nicht die ganze Wärme als Nutzenergie?",
+      muster:"Nützlich ist nur die Wärme, die ins Wasser geht. Die Wärme, die an das Gehäuse und die Luft abgegeben wird, wollen wir nicht haben. Sie ist entwertete Energie."}
+   ]
+ },
+ { nr:7, lvl:3, title:"Profi-Aufgabe: eine ganze Energiekette",
+   intro:"Kraftwerk → Leitungen → LED-Lampe. Bei jedem Schritt wird Energie entwertet.",
+   groups:[
+    {title:"Wärme bei jedem Schritt", fields:[
+      {id:"a7_k", type:"number", label:"Wärme im Kohlekraftwerk", unit:"J", answer:600, hint:"1000 J gehen hinein, 400 J elektrische Energie kommen heraus."},
+      {id:"a7_l", type:"number", label:"Wärme in den Leitungen", unit:"J", answer:40, hint:"400 J gehen hinein, 360 J kommen heraus."}
+    ]},
+    {title:"Die LED-Lampe", fields:[
+      {id:"a7_li", type:"number", label:"a) Licht aus 360 J", unit:"J", answer:126, hint:"Von 100 J macht die LED 35 J Licht. 360 J sind 3,6-mal 100 J. Rechne 3,6 · 35 J."},
+      {id:"a7_lw", type:"number", label:"Wärme in der LED", unit:"J", answer:234, hint:"360 J − Licht = ?"}
+    ]},
+    {title:"Die ganze Kette", fields:[
+      {id:"a7_end", type:"number", label:"b) Von 1000 J kommen als Licht an", unit:"J", answer:126, hint:"Das ist das Licht, das die LED am Ende macht."},
+      {id:"a7_p", type:"number", label:"b) Von 100 J werden genutzt", unit:"J", answer:12.6, hint:"1000 J sind 10-mal 100 J. Teile also durch 10."}
+    ]}
+   ],
+   texts:[{id:"a7_c", prompt:"c) Warum lohnt es sich doppelt, Strom zu sparen?",
+     muster:"Jedes Joule, das ich zu Hause spare, muss das Kraftwerk gar nicht erst liefern. Für 1 J Licht braucht man im Kraftwerk etwa 8 J Kohle-Energie. Wer Strom spart, verhindert also auch die großen Verluste im Kraftwerk und in den Leitungen."}]
+ }
+];
+
+// ---------- Zustand ----------
+const KEY="ef-check-v1";
+let state={};
+try{ state=JSON.parse(localStorage.getItem(KEY))||{} }catch(e){ state={} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)) }catch(e){} }
+
+const allFields = t => t.groups.flatMap(g=>g.fields);
+const num = v => { if(v==null) return NaN; const s=String(v).replace(/[^\d,.\-]/g,"").replace(",","."); return s===""?NaN:parseFloat(s) };
+function isRight(f,v){
+  if(f.type==="number") return Math.abs(num(v)-f.answer)<1e-9;
+  if(f.type==="mc") return Number(v)===f.answer;
+  return v===f.answer;
+}
+const fmt = n => String(n).replace(".",",");
+const dots = n => `<span class="dots">${[0,1,2].map(i=>`<i class="${i<n?"f":""}"></i>`).join("")}</span>`;
+const lvl = n => `<span class="lvl" aria-label="Niveau ${n}">${[0,1,2].map(i=>`<i class="${i<n?"f":""}"></i>`).join("")}</span>`;
+
+// ---------- Aufbau ----------
+const tabs=document.getElementById("tabs"), main=document.getElementById("main");
+TASKS.forEach((t,ti)=>{
+  const b=document.createElement("button");
+  b.setAttribute("role","tab"); b.id=`tab${t.nr}`; b.dataset.i=ti;
+  b.innerHTML=`<span class="nr">A${t.nr}</span>${dots(t.lvl)}`;
+  b.setAttribute("aria-label",`Aufgabe ${t.nr}, Niveau ${t.lvl}`);
+  b.onclick=()=>show(ti);
+  tabs.appendChild(b);
+
+  const sec=document.createElement("section");
+  sec.className="task"; sec.id=`task${t.nr}`; sec.setAttribute("role","tabpanel");
+  let html=`<div class="card"><h2>Aufgabe ${t.nr}: ${t.title} ${lvl(t.lvl)}</h2><p class="intro">${t.intro}</p>`;
+  t.groups.forEach(g=>{
+    if(g.title) html+=`<h3>${g.title}${g.lvl?lvl(g.lvl):""}</h3>`;
+    g.fields.forEach(f=>{
+      if(f.type==="mc"){
+        html+=`<div class="field" data-f="${f.id}" style="grid-template-columns:1fr 28px">
+          <div class="ctl mc" style="grid-column:1/2"><b>${f.label}</b>${f.options.map((o,oi)=>
+          `<label><input type="radio" name="${f.id}" value="${oi}"><span>${o}</span></label>`).join("")}</div>
+          <div class="mark" aria-live="polite"></div>
+          <div class="help"></div><div class="reveal"></div></div>`;
+      } else {
+        const ctl = f.type==="select"
+          ? `<select id="${f.id}"><option value="">– bitte wählen –</option>${f.options.map(o=>`<option>${o}</option>`).join("")}</select>`
+          : `<div style="display:flex;gap:6px;align-items:center"><input type="text" inputmode="decimal" id="${f.id}" autocomplete="off"><span>${f.unit||""}</span></div>`;
+        html+=`<div class="field" data-f="${f.id}"><label for="${f.id}">${f.label}</label><div class="ctl">${ctl}</div>
+          <div class="mark" aria-live="polite"></div><div class="help"></div><div class="reveal"></div></div>`;
+      }
+    });
+  });
+  html+=`<div class="actions"><button class="btn" data-check="${ti}">Prüfen</button><span class="result" id="res${t.nr}"></span></div></div>`;
+  (t.texts||[]).forEach(x=>{
+    html+=`<div class="card"><h3 style="margin-top:0">${x.prompt}</h3>
+      <textarea id="${x.id}" placeholder="Deine Antwort …"></textarea>
+      <div class="actions"><button class="btn ghost" data-muster="${x.id}">Mit Musterlösung vergleichen</button>
+      <span class="note" id="${x.id}_n"></span></div>
+      <div class="muster" id="${x.id}_m"><b>Musterlösung:</b> ${x.muster}<br><span class="note">Vergleiche: Hast du die gleichen Gründe genannt? Ergänze fehlende Punkte auf deinem Blatt.</span></div></div>`;
+  });
+  if(t.nr===5) html+=`<p class="note">Tipp: Im <a href="labor.html?g=dynamo&raster=1">Energiefluss-Labor</a> siehst du das Diagramm mit Kästchenraster.</p>`;
+  sec.innerHTML=html; main.appendChild(sec);
+});
+
+// Werte aus dem Speicher
+TASKS.forEach(t=>{
+  allFields(t).forEach(f=>{
+    const s=state[f.id]; if(!s) return;
+    if(f.type==="mc"){ const r=document.querySelector(`input[name="${f.id}"][value="${s.v}"]`); if(r) r.checked=true; }
+    else { const el=document.getElementById(f.id); if(el && s.v!=null) el.value=s.v; }
+    if(s.checked) markField(f, s.v, false);
+  });
+  (t.texts||[]).forEach(x=>{ const s=state[x.id]; if(s){ document.getElementById(x.id).value=s.v||""; if(s.open) document.getElementById(x.id+"_m").classList.add("show"); }});
+  updateTab(t);
+});
+
+function getVal(f){
+  if(f.type==="mc"){ const r=document.querySelector(`input[name="${f.id}"]:checked`); return r?r.value:null; }
+  return document.getElementById(f.id).value;
+}
+function markField(f,v,countTry=true){
+  const box=document.querySelector(`[data-f="${f.id}"]`);
+  const s=state[f.id]=state[f.id]||{tries:0};
+  s.v=v; s.checked=true;
+  const empty = v==null || v==="";
+  const ok = !empty && isRight(f,v);
+  if(countTry && !empty && !ok && s.lastWrong!==v){ s.tries=(s.tries||0)+1; s.lastWrong=v; }
+  s.ok=ok;
+  box.classList.toggle("ok",ok); box.classList.toggle("bad",!ok && !empty);
+  if(f.type==="mc"){ const m=box.querySelector(".mc"); m.classList.toggle("ok",ok); m.classList.toggle("bad",!ok&&!empty); }
+  box.querySelector(".mark").textContent = empty ? "" : (ok ? "✅" : "✗");
+  box.querySelector(".mark").style.color = ok ? "" : "var(--heat)";
+  const help=box.querySelector(".help"), rev=box.querySelector(".reveal");
+  if(!ok && !empty){
+    help.innerHTML=`<b>Tipp:</b> ${f.hint}` + (s.tries>=2 ? ` <button type="button">Lösung zeigen</button>` : "");
+    help.classList.add("show");
+    const b=help.querySelector("button");
+    if(b) b.onclick=()=>{ rev.textContent="Lösung: "+(f.type==="mc"?f.options[f.answer]:(f.type==="number"?fmt(f.answer)+" "+(f.unit||""):f.answer))+" – überlege, warum das stimmt."; rev.classList.add("show"); };
+  } else { help.classList.remove("show"); rev.classList.remove("show"); }
+}
+function updateTab(t){
+  const fs=allFields(t);
+  const done=fs.every(f=>state[f.id]&&state[f.id].ok);
+  document.getElementById(`tab${t.nr}`).classList.toggle("done",done);
+}
+
+main.addEventListener("click",e=>{
+  const c=e.target.closest("[data-check]");
+  if(c){
+    const t=TASKS[+c.dataset.check];
+    const fs=allFields(t);
+    let ok=0, filled=0;
+    fs.forEach(f=>{ const v=getVal(f); if(v!=null&&v!==""){filled++;} markField(f,v); if(state[f.id].ok) ok++; });
+    const res=document.getElementById(`res${t.nr}`);
+    if(filled===0) res.textContent="Trage zuerst etwas ein.";
+    else if(ok===fs.length) res.textContent=`Alles richtig – stark! ${t.nr<7?"Weiter mit Aufgabe "+(t.nr+1)+".":""}`;
+    else res.textContent=`${ok} von ${fs.length} richtig. Lies die Tipps und versuche es noch einmal.`;
+    updateTab(t); save();
+  }
+  const m=e.target.closest("[data-muster]");
+  if(m){
+    const id=m.dataset.muster, ta=document.getElementById(id);
+    if(ta.value.trim().length<20){ document.getElementById(id+"_n").textContent="Schreib zuerst deine eigene Antwort (mindestens einen ganzen Satz)."; ta.focus(); return; }
+    document.getElementById(id+"_n").textContent="";
+    document.getElementById(id+"_m").classList.add("show");
+    state[id]={v:ta.value,open:true}; save();
+  }
+});
+main.addEventListener("input",e=>{
+  if(e.target.tagName==="TEXTAREA"){ state[e.target.id]={...(state[e.target.id]||{}),v:e.target.value}; save(); }
+});
+
+function show(i){
+  [...tabs.children].forEach((b,bi)=>b.setAttribute("aria-selected",bi===i));
+  [...main.children].forEach((s,si)=>s.classList.toggle("active",si===i));
+  try{ localStorage.setItem(KEY+"-tab",i) }catch(e){}
+  tabs.children[i].scrollIntoView({block:"nearest",inline:"center"});
+}
+const q=new URLSearchParams(location.search).get("a");
+let start=0; try{ start=+(localStorage.getItem(KEY+"-tab")||0) }catch(e){}
+if(q) start=Math.max(0,Math.min(TASKS.length-1,+q-1));
+show(start);
+
+document.getElementById("reset").onclick=()=>{
+  if(!confirm("Alle Eingaben auf diesem Gerät löschen?")) return;
+  state={}; save(); location.reload();
+};
+</script>
+</body>
+</html>
