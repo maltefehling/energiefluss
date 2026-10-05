@@ -114,6 +114,31 @@ textarea{width:100%;min-height:110px;font:17px/1.45 "Nunito",sans-serif;color:va
 .foot{margin-top:28px;font-size:.88rem;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
 .hide{display:none!important}
 
+/* Fünf-Schritt */
+.five{display:grid;gap:8px;margin:4px 0 2px}
+.step{display:grid;grid-template-columns:34px 1fr 26px;gap:8px;align-items:start;border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}
+.step .sn{width:30px;height:30px;border-radius:50%;background:#1F4E79;color:#fff;font:800 15px "Nunito",sans-serif;display:flex;align-items:center;justify-content:center}
+.step .sl{font-weight:800;color:#1F4E79;margin:3px 0 4px}
+.step .mk{font-size:20px;text-align:center;margin-top:2px}
+.step.right{border-color:var(--green);background:var(--ok-bg)}
+.step.wrong{border-color:var(--heat);background:var(--bad-bg)}
+.gv{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:3px 0}
+.gv .val{font-weight:800;min-width:64px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.ch{position:relative;cursor:pointer;user-select:none;-webkit-user-select:none}
+.ch input{position:absolute;opacity:0;pointer-events:none}
+.ch span{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:6px 12px;min-height:40px;line-height:24px;background:#fff;font-weight:700}
+.ch input:checked + span{border-color:var(--ink);background:var(--ink);color:#fff}
+.ch input:focus-visible + span{outline:3px solid var(--blue);outline-offset:2px}
+.ch input:disabled + span{opacity:.75}
+.sent{display:grid;gap:6px}
+.sent label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;padding:4px 0}
+.sent input{width:20px;height:20px;accent-color:var(--ink);flex:0 0 auto;margin-top:3px}
+.fs{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:4px 0}
+.fs b{color:#1F4E79}
+.xv{font-weight:800;color:#1F4E79;border-bottom:2px dotted #1F4E79;padding:0 3px}
+.fsline{font-weight:800;color:#1F4E79;letter-spacing:.01em}
+
 /* Rate-Wächter */
 #guard{position:fixed;inset:0;background:rgba(31,42,68,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
 #guard.show{display:flex}
@@ -160,8 +185,8 @@ body.summary #sumView{display:block}
       <div class="note" style="color:var(--ink)">Beispiel: 150 J : 200 J = 0,75 = 75 %</div>
     </div>
     <ol class="steps">
-      <li><b>Teil A – Formel-Training:</b> vier Rechenaufgaben. Deine Zahlen sind anders als die deines Nachbarn.</li>
-      <li><b>Teil B – Aufgaben wie im Test:</b> Lies zuerst das <b>Material</b> genau, dann die Frage.</li>
+      <li><b>Teil A – Formel-Training:</b> vier Rechenaufgaben im <b>Fünf-Schritt</b>: ① gegeben ② gesucht ③ Formel ④ Rechnung ⑤ Antwort. Deine Zahlen sind anders als die deines Nachbarn.</li>
+      <li><b>Teil B – Aufgaben wie im Test:</b> Lies zuerst das <b>Material</b> genau, dann die Frage. Rechenaufgaben löst du auf Papier im Fünf-Schritt.</li>
       <li>Rechne auf deinem Blatt oder in OneNote mit. Pro Frage hast du <b>zwei Versuche</b>. Nach dem ersten Fehler bekommst du einen Tipp.</li>
       <li>Fragen mit <span class="lvl"><i class="f"></i><i class="f"></i><i class="f"></i></span> sind für Profis. Du darfst sie überspringen.</li>
       <li>Am Ende bekommst du eine <b>Übersicht mit allen Fragen und richtigen Antworten</b>. Davon machst du einen Screenshot für dein OneNote.</li>
@@ -199,8 +224,8 @@ body.summary #sumView{display:block}
     <p><b>Raten hilft dir nicht weiter</b> – in der Klassenarbeit gibt es keinen zweiten Versuch. So geht es besser:</p>
     <ol class="steps">
       <li>Lies das Material und die Frage noch einmal Wort für Wort.</li>
-      <li>Schreib die Formel auf: η = E<sub>nutz</sub> : E<sub>zu</sub></li>
-      <li>Setz die Zahlen ein und rechne mit dem Taschenrechner.</li>
+      <li>Arbeite im Fünf-Schritt: ① gegeben ② gesucht ③ Formel ④ Rechnung ⑤ Antwort.</li>
+      <li>Setz die Zahlen in die Formel ein und rechne mit dem Taschenrechner.</li>
     </ol>
     <p class="note">Dieser Hinweis wird in deiner Übersicht vermerkt.</p>
     <div class="actions"><button class="btn" id="gOk" disabled>Weiter in 10 s</button></div>
@@ -234,7 +259,7 @@ function flowSVG(use){
 }
 
 /* ================= Zustand ================= */
-const KEY = "ef-wirkungsgrad-v1";
+const KEY = "ef-wirkungsgrad-v2";
 let S;
 function freshState(){ return { seed: (Math.random()*2**31)|0, cur: 0, max: 0, items: {}, flags: 0, recent: [], seenUnits: {}, started: false, done: false, date: new Date().toISOString() }; }
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
@@ -244,12 +269,12 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 /* ================= Aufgaben ================= */
 const rnd = mulberry(S.seed);
 const DEV = [
-  {n:"Ein Elektromotor", k:"Elektromotor", p:"er", f:"elektrische Energie", u:"Bewegungsenergie", etas:[75,80,85,90]},
-  {n:"Eine Solarzelle", k:"Solarzelle", p:"sie", f:"Lichtenergie", u:"elektrische Energie", etas:[15,20,25]},
-  {n:"Ein Benzinmotor", k:"Benzinmotor", p:"er", f:"chemische Energie", u:"Bewegungsenergie", etas:[25,30,35]},
-  {n:"Ein Wasserkocher", k:"Wasserkocher", p:"er", f:"elektrische Energie", u:"Wärme im Wasser", etas:[85,90,95]},
-  {n:"Ein Fahrraddynamo", k:"Fahrraddynamo", p:"er", f:"Bewegungsenergie", u:"elektrische Energie", etas:[55,60,65,70]},
-  {n:"Ein Handy-Ladegerät", k:"Ladegerät", p:"es", f:"elektrische Energie", u:"Energie im Akku", etas:[70,75,80]}
+  {n:"Ein Elektromotor", nom:"Der Elektromotor", gen:"des Elektromotors", k:"Elektromotor", p:"er", f:"elektrische Energie", u:"Bewegungsenergie", etas:[75,80,85,90]},
+  {n:"Eine Solarzelle", nom:"Die Solarzelle", gen:"der Solarzelle", k:"Solarzelle", p:"sie", f:"Lichtenergie", u:"elektrische Energie", etas:[15,20,25]},
+  {n:"Ein Benzinmotor", nom:"Der Benzinmotor", gen:"des Benzinmotors", k:"Benzinmotor", p:"er", f:"chemische Energie", u:"Bewegungsenergie", etas:[25,30,35]},
+  {n:"Ein Wasserkocher", nom:"Der Wasserkocher", gen:"des Wasserkochers", k:"Wasserkocher", p:"er", f:"elektrische Energie", u:"Wärme im Wasser", etas:[85,90,95]},
+  {n:"Ein Fahrraddynamo", nom:"Der Fahrraddynamo", gen:"des Fahrraddynamos", k:"Fahrraddynamo", p:"er", f:"Bewegungsenergie", u:"elektrische Energie", etas:[55,60,65,70]},
+  {n:"Ein Handy-Ladegerät", nom:"Das Ladegerät", gen:"des Ladegeräts", k:"Ladegerät", p:"es", f:"elektrische Energie", u:"Energie im Akku", etas:[70,75,80]}
 ];
 const ZU = [200, 400, 500, 600, 800, 1000];
 const order = shuffle(rnd, DEV.length);
@@ -260,43 +285,51 @@ const pct = (a,b) => Math.round(a/b*1000)/10;
 const UNITS = [
  { id:"A", part:"A", title:"Formel-Training", material:null, items:[
    (()=>{ const {d,eta,zu,nu} = A[0]; return {
-     id:"A1", lvl:1, comp:"Fachwissen · AFB I", type:"num", u:"%", ans:eta, tol:0.05,
-     q:`${d.n} bekommt <b>${zu} J</b> ${d.f}. Daraus macht ${d.p} <b>${nu} J</b> ${d.u}.<br>Berechne den Wirkungsgrad in Prozent.`,
+     id:"A1", lvl:1, comp:"Fachwissen · AFB I", type:"fuenf", u:"%", ans:eta, tol:0.05,
+     q:`${d.n} bekommt <b>${zu} J</b> ${d.f}. Daraus macht ${d.p} <b>${nu} J</b> ${d.u}.<br>Berechne den Wirkungsgrad in Prozent. Löse im Fünf-Schritt.`,
      errs:[{v:pct(zu,nu), m:"Du hast die Zahlen vertauscht. Oben in den Bruch gehört die <b>Nutzenergie</b>, unten die zugeführte Energie."},
            {v:eta/100, m:"Das ist die Dezimalzahl. Gefragt ist der Wert in <b>Prozent</b>: mal 100."},
            {v:100-eta, m:"Das ist der Anteil, der <b>entwertet</b> wird. Gesucht ist der genutzte Anteil."},
            {v:zu-nu, m:"Das ist die entwertete Energie in Joule. Gesucht ist der Wirkungsgrad: E<sub>nutz</sub> : E<sub>zu</sub>."}],
      tip:`Setz ein: η = ${nu} J : ${zu} J. Das Ergebnis nimmst du mal 100.`,
      why:`η = ${nu} J : ${zu} J = ${fmt(eta/100)} = <b>${eta} %</b>`,
-     sq:`${d.k}: ${zu} J zugeführt, ${nu} J genutzt – η in %?`, sa:`${eta} %`};})(),
+     sq:`${d.k}: ${zu} J zugeführt, ${nu} J genutzt – η in %?`, sa:`η = ${nu} J : ${zu} J = ${fmt(eta/100)} = ${eta} %`,
+     five:{given:[[`${zu} J`,"zu"],[`${nu} J`,"nutz"]], sought:"eta", form:"eta", calc:`η = ${nu} J : ${zu} J = ${fmt(eta/100)} = ${eta} %`,
+       x:`${eta}`, sents:[`Der Wirkungsgrad ${d.gen} beträgt {x} %.`, `Der Wirkungsgrad ${d.gen} beträgt {x} J.`, `${d.nom} gibt {x} % der Energie als Wärme ab.`]}};})(),
    (()=>{ const {d,eta,zu,nu} = A[1]; return {
-     id:"A2", lvl:1, comp:"Fachwissen · AFB I", type:"num", u:"", ans:eta/100, tol:0.0005,
-     q:`${d.n} bekommt <b>${zu} J</b> ${d.f} und macht daraus <b>${nu} J</b> ${d.u}.<br>Gib den Wirkungsgrad als <b>Dezimalzahl</b> an (ohne Prozent).`,
+     id:"A2", lvl:1, comp:"Fachwissen · AFB I", type:"fuenf", u:"", ans:eta/100, tol:0.0005,
+     q:`${d.n} bekommt <b>${zu} J</b> ${d.f} und macht daraus <b>${nu} J</b> ${d.u}.<br>Gib den Wirkungsgrad als <b>Dezimalzahl</b> an (ohne Prozent). Löse im Fünf-Schritt.`,
      errs:[{v:eta, m:"Das ist der Wert in Prozent. Gefragt ist die <b>Dezimalzahl</b> – also das Ergebnis der Division, ohne mal 100."},
            {v:Math.round(zu/nu*1000)/1000, m:"Du hast die Zahlen vertauscht. Ein Wirkungsgrad ist nie größer als 1."},
            {v:(100-eta)/100, m:"Das ist der Anteil, der entwertet wird. Gesucht ist der genutzte Anteil."}],
      tip:`Rechne ${nu} : ${zu} mit dem Taschenrechner.`,
      why:`η = ${nu} J : ${zu} J = <b>${fmt(eta/100)}</b> (das sind ${eta} %)`,
-     sq:`${d.k}: ${zu} J zugeführt, ${nu} J genutzt – η als Dezimalzahl?`, sa:fmt(eta/100)};})(),
+     sq:`${d.k}: ${zu} J zugeführt, ${nu} J genutzt – η als Dezimalzahl?`, sa:`η = ${nu} J : ${zu} J = ${fmt(eta/100)}`,
+     five:{given:[[`${zu} J`,"zu"],[`${nu} J`,"nutz"]], sought:"eta", form:"eta", calc:`η = ${nu} J : ${zu} J = ${fmt(eta/100)}`,
+       x:fmt(eta/100), sents:[`Der Wirkungsgrad ${d.gen} beträgt {x}.`, `Der Wirkungsgrad ${d.gen} beträgt {x} J.`, `${d.nom} verliert {x} J Energie.`]}};})(),
    (()=>{ const {d,eta,zu,nu} = A[2]; return {
-     id:"A3", lvl:2, comp:"Fachwissen · AFB II", type:"num", u:"J", ans:nu, tol:0.01,
-     q:`${d.n} hat einen Wirkungsgrad von <b>${eta} %</b>. ${d.p[0].toUpperCase()+d.p.slice(1)} bekommt <b>${zu} J</b> ${d.f}.<br>Wie viel Joule ${d.u} entstehen?`,
+     id:"A3", lvl:2, comp:"Fachwissen · AFB II", type:"fuenf", u:"J", ans:nu, tol:0.01,
+     q:`${d.n} hat einen Wirkungsgrad von <b>${eta} %</b>. ${d.p[0].toUpperCase()+d.p.slice(1)} bekommt <b>${zu} J</b> ${d.f}.<br>Wie viel Joule ${d.u} entstehen? Löse im Fünf-Schritt.`,
      errs:[{v:zu-nu, m:"Das ist die entwertete Energie. Gesucht ist die <b>Nutzenergie</b>."},
            {v:zu*eta, m:`Fast! ${eta} % ist nicht ${eta}, sondern ${fmt(eta/100)}. Teile noch durch 100.`},
            {v:Math.round(zu/eta*100*10)/10, m:"Du hast geteilt. Hier musst du <b>malnehmen</b>: E<sub>nutz</sub> = η · E<sub>zu</sub>."},
            {v:zu-eta, m:`Prozent und Joule kann man nicht einfach abziehen. Rechne ${fmt(eta/100)} · ${zu} J.`}],
      tip:`${eta} % heißt: Von 100 J werden ${eta} J genutzt. Rechne ${fmt(eta/100)} · ${zu} J.`,
      why:`E<sub>nutz</sub> = η · E<sub>zu</sub> = ${fmt(eta/100)} · ${zu} J = <b>${nu} J</b>`,
-     sq:`${d.k}: η = ${eta} %, ${zu} J zugeführt – Nutzenergie?`, sa:`${nu} J`};})(),
+     sq:`${d.k}: η = ${eta} %, ${zu} J zugeführt – Nutzenergie?`, sa:`E<sub>nutz</sub> = ${fmt(eta/100)} · ${zu} J = ${nu} J`,
+     five:{given:[[`${eta} %`,"eta"],[`${zu} J`,"zu"]], sought:"nutz", form:"nutz", calc:`E<sub>nutz</sub> = ${fmt(eta/100)} · ${zu} J = ${nu} J`,
+       x:`${nu}`, sents:[`${d.nom} liefert {x} J ${d.u}.`, `${d.nom} liefert {x} % ${d.u}.`, `${d.nom} gibt {x} J Wärme ab.`]}};})(),
    (()=>{ const {d,eta,zu,nu} = A[3]; return {
-     id:"A4", lvl:3, comp:"Fachwissen · AFB II", type:"num", u:"J", ans:zu, tol:0.01,
-     q:`${d.n} soll <b>${nu} J</b> ${d.u} liefern. Der Wirkungsgrad ist <b>${eta} %</b>.<br>Wie viel Joule ${d.f} muss man zuführen?`,
+     id:"A4", lvl:3, comp:"Fachwissen · AFB II", type:"fuenf", u:"J", ans:zu, tol:0.01,
+     q:`${d.n} soll <b>${nu} J</b> ${d.u} liefern. Der Wirkungsgrad ist <b>${eta} %</b>.<br>Wie viel Joule ${d.f} muss man zuführen? Löse im Fünf-Schritt.`,
      errs:[{v:Math.round(nu*eta)/100, m:"Du hast malgenommen. Die zugeführte Energie muss aber <b>größer</b> sein als die Nutzenergie."},
            {v:Math.round(nu/eta*100)/100, m:`Fast! ${eta} % ist ${fmt(eta/100)}. Teile durch ${fmt(eta/100)}, nicht durch ${eta}.`},
            {v:nu+eta, m:"Prozent und Joule kann man nicht addieren. Stell die Formel um: E<sub>zu</sub> = E<sub>nutz</sub> : η."}],
      tip:`Stell die Formel um: E<sub>zu</sub> = E<sub>nutz</sub> : η = ${nu} J : ${fmt(eta/100)}`,
      why:`E<sub>zu</sub> = E<sub>nutz</sub> : η = ${nu} J : ${fmt(eta/100)} = <b>${zu} J</b><br>Probe: ${nu} J : ${zu} J = ${fmt(eta/100)} ✓`,
-     sq:`${d.k}: soll ${nu} J liefern, η = ${eta} % – zugeführte Energie?`, sa:`${zu} J`};})()
+     sq:`${d.k}: soll ${nu} J liefern, η = ${eta} % – zugeführte Energie?`, sa:`E<sub>zu</sub> = ${nu} J : ${fmt(eta/100)} = ${zu} J`,
+     five:{given:[[`${nu} J`,"nutz"],[`${eta} %`,"eta"]], sought:"zu", form:"zu", calc:`E<sub>zu</sub> = ${nu} J : ${fmt(eta/100)} = ${zu} J`,
+       x:`${zu}`, sents:[`Man muss {x} J ${d.f} zuführen.`, `Man muss {x} % ${d.f} zuführen.`, `Dabei entstehen {x} J Wärme.`]}};})()
  ]},
 
  { id:"B1", part:"B", title:"Wasser kochen – aber womit?",
@@ -432,7 +465,48 @@ const UNITS = [
 const ITEMS = [];
 UNITS.forEach(u => u.items.forEach((it, k) => { it.unit = u; it.first = k === 0; ITEMS.push(it); }));
 // Reihenfolge der Antwortmöglichkeiten pro Schüler mischen (fest über den Seed)
-ITEMS.forEach(it => { if (it.type === "mc" || it.type === "diag") it.order = shuffle(rnd, (it.opts || it.vals).length); });
+ITEMS.forEach(it => { if (it.type === "mc" || it.type === "diag") it.order = shuffle(rnd, (it.opts || it.vals).length); if (it.type === "fuenf") it.five.order = shuffle(rnd, 3); });
+
+/* ================= Fünf-Schritt ================= */
+const QTY = { zu:"E<sub>zu</sub> zugeführt", nutz:"E<sub>nutz</sub> genutzt", eta:"η Wirkungsgrad" };
+const QSYM = { zu:"E<sub>zu</sub>", nutz:"E<sub>nutz</sub>", eta:"η" };
+const FORMS = [["eta","η = E<sub>nutz</sub> : E<sub>zu</sub>"],["nutz","E<sub>nutz</sub> = η · E<sub>zu</sub>"],["zu","E<sub>zu</sub> = E<sub>nutz</sub> : η"],["inv","η = E<sub>zu</sub> : E<sub>nutz</sub>"]];
+const FORM = Object.fromEntries(FORMS);
+const chips = (name, opts, val, dis) => `<span class="chips">${opts.map(([k, t]) => `<label class="ch"><input type="radio" name="${name}" value="${k}" ${val === k ? "checked" : ""} ${dis ? "disabled" : ""}><span>${t}</span></label>`).join("")}</span>`;
+function fiveHtml(it, v, dis){
+  const f = it.five; v = v || {};
+  const Q = Object.entries(QTY);
+  const step = (n, label, body) => `<div class="step" id="fs${n}"><span class="sn">${n}</span><div><div class="sl">${label}</div>${body}</div><span class="mk"></span></div>`;
+  return `<div class="five">
+    ${step(1, "gegeben – was bedeuten die Zahlen?", f.given.map((g, k) => `<div class="gv"><span class="val">${g[0]}</span>${chips("g" + k, Q, (v.g || [])[k], dis)}</div>`).join(""))}
+    ${step(2, "gesucht", chips("s", Q, v.s, dis))}
+    ${step(3, "Formel", chips("f", FORMS, v.f, dis))}
+    ${step(4, "Rechnung – auf Papier einsetzen und rechnen. Ergebnis:", `<div class="numrow" id="nr"><input id="inp" inputmode="decimal" autocomplete="off" aria-label="Ergebnis" ${dis ? "disabled" : ""} value="${v.r != null ? String(v.r).replace(/"/g,"") : ""}"><span class="u">${it.u}</span></div>`)}
+    ${step(5, "Antwortsatz", `<div class="sent">${f.order.map(k => `<label><input type="radio" name="a" value="${k}" ${v.a == k ? "checked" : ""} ${dis ? "disabled" : ""}><span>${f.sents[k].replace("{x}", `<span class="xv">${v.r ? String(v.r).replace(/</g, "") : "…"}</span>`)}</span></label>`).join("")}</div>`)}
+  </div>`;
+}
+const radio = n => { const r = document.querySelector(`input[name="${n}"]:checked`); return r ? r.value : null; };
+function fiveCheck(it, v){
+  const f = it.five, x = num(v.r);
+  const res = [ f.given.every((g, k) => v.g[k] === g[1]), v.s === f.sought, v.f === f.form,
+                Math.abs(x - it.ans) <= (it.tol || 0.01) + 1e-9, +v.a === 0 ];
+  const msg = [];
+  if (!res[0]) msg.push("① Welche Energie geht hinein (E<sub>zu</sub>), welche wird genutzt (E<sub>nutz</sub>)? Eine Angabe in Prozent ist immer der Wirkungsgrad η.");
+  if (!res[1]) msg.push("② Lies die letzte Frage der Aufgabe: Wonach wird gefragt?");
+  if (!res[2]) msg.push(v.f === "inv" ? "③ Der Bruch ist vertauscht: Die Nutzenergie gehört nach oben." : `③ Die Formel muss mit der gesuchten Größe beginnen: ${QSYM[f.sought]} = …`);
+  if (!res[3]){ const e = (it.errs || []).find(e => Math.abs(x - e.v) <= (e.tol || 0.01) * Math.max(1, Math.abs(e.v)) + 1e-9); msg.push("④ " + (e ? e.m : "Das Ergebnis stimmt noch nicht. Setz die Zahlen in die Formel ein.")); }
+  if (!res[4]) msg.push("⑤ Der Antwortsatz braucht die richtige Einheit – und er muss genau das beantworten, wonach gefragt ist.");
+  return { res, msg };
+}
+function fiveMark(res){ res.forEach((r, k) => { const el = $("#fs" + (k + 1)); el.classList.remove("right", "wrong"); el.classList.add(r ? "right" : "wrong"); el.querySelector(".mk").textContent = r ? "✓" : "✗"; }); }
+function fiveSolution(it){
+  const f = it.five;
+  return `<div class="fs"><b>① gegeben:</b><span>${f.given.map(g => `${QSYM[g[1]]} = ${g[0]}`).join(", ")}</span>
+    <b>② gesucht:</b><span>${QSYM[f.sought]}</span>
+    <b>③ Formel:</b><span>${FORM[f.form]}</span>
+    <b>④ Rechnung:</b><span>${f.calc}</span>
+    <b>⑤ Antwort:</b><span>${f.sents[0].replace("{x}", f.x)}</span></div>`;
+}
 
 const st = id => S.items[id] || (S.items[id] = { tries: 0, status: "open" });
 const isDone = s => ["ok1","ok2","shown","skip","text"].includes(s.status);
@@ -443,7 +517,8 @@ const isDone = s => ["ok1","ok2","shown","skip","text"].includes(s.status);
    Zweimal verdächtig unter den letzten vier Antworten → Pause-Fenster. */
 let shownAt = Date.now(), firstLook = false;
 function needSeconds(it, retry){
-  if (retry) return 4;
+  if (retry) return it.type === "fuenf" ? 6 : 4;
+  if (it.type === "fuenf") return Math.max(15, Math.min(30, words(it.q) * 0.2 + 12));
   let w = words(it.q) + (it.type === "mc" || it.type === "diag" ? words((it.opts||[]).join(" ")) : 0) + (it.type === "tf" ? words(it.rows.map(r=>r[0]).join(" ")) : 0);
   if (firstLook && it.unit.material) w += words(it.unit.material) * 0.6;
   let s = w * 0.2 + (it.type === "num" ? 4 : 0);
@@ -500,6 +575,8 @@ function render(){
     <div class="q">${it.id} ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
   if (it.type === "num"){
     h += `<div class="numrow" id="nr"><input id="inp" inputmode="decimal" autocomplete="off" aria-label="Deine Antwort" ${done ? "disabled" : ""} value="${s.val != null ? String(s.val).replace(/"/g,"") : ""}"><span class="u">${it.u}</span></div>`;
+  } else if (it.type === "fuenf"){
+    h += fiveHtml(it, s.val, done);
   } else if (it.type === "mc" || it.type === "diag"){
     h += `<div class="opts ${it.type === "diag" ? "diag" : ""}">` + it.order.map(k => `<label class="opt ${it.type === "diag" ? "diag" : ""}" data-k="${k}"><input type="radio" name="mc" value="${k}" ${done ? "disabled" : ""} ${s.val == k ? "checked" : ""}>${it.type === "diag" ? flowSVG(it.vals[k]) : `<span>${it.opts[k]}</span>`}</label>`).join("") + `</div>`;
   } else if (it.type === "tf"){
@@ -512,7 +589,8 @@ function render(){
     <div class="actions" id="act"></div></section>`;
   $("#quiz").innerHTML = h;
   if (it.type === "text"){ const ta = $("#ta"); ta.oninput = () => { s.val = ta.value; save(); }; }
-  if (it.type === "num"){ const inp = $("#inp"); inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); }); }
+  if (it.type === "fuenf"){ const inp = $("#inp"); inp.addEventListener("input", () => document.querySelectorAll(".xv").forEach(x => x.textContent = inp.value.trim() || "…")); }
+  if (it.type === "num" || it.type === "fuenf"){ const inp = $("#inp"); inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); }); }
   if (done || s.revealed) showFinished(); else showActions();
   window.scrollTo({top: 0});
 }
@@ -541,6 +619,7 @@ function check(){
   const it = ITEMS[S.cur], s = st(it.id);
   $("#slow").classList.remove("show");
   if (it.type === "text") return checkText(it, s);
+  if (it.type === "fuenf") return checkFive(it, s);
   const v = read(it);
   if (it.type === "num" && isNaN(num(v))){ fb("tip", "<p>Gib eine Zahl ein, zum Beispiel <b>45</b> oder <b>0,45</b>.</p>"); return; }
   if ((it.type === "mc" || it.type === "diag") && v === null){ fb("tip", "<p>Wähle eine Antwort aus.</p>"); return; }
@@ -574,6 +653,21 @@ function check(){
   shownAt = Date.now();
 }
 
+function checkFive(it, s){
+  const v = { g: it.five.given.map((_, k) => radio("g" + k)), s: radio("s"), f: radio("f"), r: $("#inp").value, a: radio("a") };
+  if (v.g.includes(null) || !v.s || !v.f || isNaN(num(v.r)) || v.a === null){ fb("tip", "<p>Fülle zuerst <b>alle fünf Schritte</b> aus. Bei ④ gibst du nur das Ergebnis als Zahl ein.</p>"); return; }
+  const { res, msg } = fiveCheck(it, v), ok = res.every(Boolean);
+  fiveMark(res);
+  s.val = v; s.tries++;
+  const g = guardCheck(it, ok, s.tries > 1);
+  if (ok){ s.status = s.tries === 1 ? "ok1" : "ok2"; save(); showFinished(true); return; }
+  if (s.tries >= 2){ s.status = "shown"; save(); showFinished(false, msg.join("<br>")); return; }
+  save();
+  fb("bad", `<p><b>Noch nicht alles richtig.</b> ${res.filter(Boolean).length} von 5 Schritten stimmen.</p><p>${msg.join("<br>")}</p><p><b>Tipp:</b> ${it.tip}</p><p class="note">Du hast noch einen Versuch. Ändere die Schritte mit ✗.</p>`);
+  if (g === "soft") $("#slow").classList.add("show");
+  shownAt = Date.now();
+}
+
 function checkText(it, s){
   const t = ($("#ta").value || "").trim();
   if (t.length < 40 || looksLikeNonsense(t)){
@@ -597,6 +691,13 @@ function showFinished(fresh, detail){
       $("#nx").onclick = () => { s.self = [...document.querySelectorAll(".crit input")].map(x => x.checked); s.status = "text"; next(); };
     } else navButtons();
     return;
+  }
+  if (it.type === "fuenf"){
+    if (s.val && s.status !== "skip") fiveMark(fiveCheck(it, s.val).res);
+    if (s.status === "skip") fb("sol", `<p><b>Übersprungen.</b> So wäre es gegangen:</p>${fiveSolution(it)}`);
+    else if (s.status === "shown") fb("sol", `<p><b>Leider nicht alles richtig.</b></p><p>${detail || fiveCheck(it, s.val).msg.join("<br>")}</p><p><b>So geht's im Fünf-Schritt:</b></p>${fiveSolution(it)}<p class="note">Schreib den Fünf-Schritt so auf dein Blatt.</p>`);
+    else fb("ok", `<p><b>${s.status === "ok1" ? "Alle fünf Schritte richtig! 🎉" : "Jetzt stimmt's! 👍"}</b></p>${fiveSolution(it)}`);
+    return navButtons();
   }
   // gewählte/gegebene Antwort wieder markieren
   if (it.type === "mc" || it.type === "diag"){
@@ -639,13 +740,14 @@ function showSummary(){
     if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.part === "A" ? "Teil A · Formel-Training" : "Teil " + it.unit.id + " · " + it.unit.title}</td></tr>`; }
     const s = st(it.id);
     const status = it.type === "text" ? `✍️ selbst geprüft ${(s.self || []).filter(Boolean).length}/${it.crit.length}` : STAT[s.status];
-    rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
+    rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
   });
   const c = k => ITEMS.filter(it => st(it.id).status === k).length;
   $("#sumCard").innerHTML = `
     <div class="top"><h2>Wirkungsgrad – meine Übersicht</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
     <div class="merk"><div class="f">${ETA} = <span class="frac"><span>Nutzenergie</span><span>zugeführte Energie</span></span></div>
-      <div>η hat keine Einheit · als Dezimalzahl oder in % (mal 100)<br>η ist immer <b>kleiner als 100 %</b>, weil immer Energie entwertet wird.</div></div>
+      <div>η hat keine Einheit · als Dezimalzahl oder in % (mal 100)<br>η ist immer <b>kleiner als 100 %</b>, weil immer Energie entwertet wird.</div>
+      <div class="fsline">Fünf-Schritt: ① gegeben ② gesucht ③ Formel ④ Rechnung ⑤ Antwort</div></div>
     <table><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Mein Ergebnis</th></tr>${rows}</table>
     <div class="stats"><span>✅ 1. Versuch: ${c("ok1")}</span><span>✅ 2. Versuch: ${c("ok2")}</span><span>❌ Lösung gezeigt: ${c("shown")}</span><span>– übersprungen: ${c("skip")}</span>
     <span class="${S.flags ? "warn" : ""}">${S.flags ? "⚠️ Rate-Hinweise: " + S.flags : "Rate-Hinweise: 0 👍"}</span></div>`;
