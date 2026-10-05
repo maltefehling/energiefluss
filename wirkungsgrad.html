@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wirkungsgrad-Check</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>η</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F2A44; --blue:#3B6FB6; --green:#2E9E5B; --heat:#E4572E; --marker:#FFD447;
+  --paper:#FFFFFF; --grid:#DCE7F5; --muted:#5C6780; --line:#C9D3E3;
+  --ok-bg:#E3F4EA; --bad-bg:#FDE8E2; --merk:#DDE8F5; --hilfe:#FDF6EA; --hilfe-rand:#FBD9A8;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; color:var(--ink); font:17px/1.5 "Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:20px 20px;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 60px}
+h1{font-family:"Patrick Hand","Comic Sans MS",cursive;font-weight:400;font-size:2.4rem;line-height:1.1;margin:8px 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+.card{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:4px 4px 0 var(--ink)}
+.card h2{font-family:"Patrick Hand",cursive;font-weight:400;font-size:1.7rem;margin:0 0 6px;line-height:1.15}
+.merk{background:var(--merk);border:2px solid var(--blue);border-radius:12px;padding:12px 16px;margin:10px 0}
+.merk .f{font-size:1.25rem;font-weight:800;white-space:nowrap}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;line-height:1.15}
+.frac span:first-child{border-bottom:2px solid currentColor;padding:0 4px}
+.frac span{padding:0 4px}
+sub{font-size:.7em}
+ol.steps{padding-left:1.3em;margin:8px 0}
+ol.steps li{margin:4px 0}
+
+/* Fortschritt */
+#prog{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 14px;padding:8px 0;border-bottom:2px solid var(--ink);position:sticky;top:env(safe-area-inset-top,0px);background:rgba(255,255,255,.95);z-index:5}
+#prog .part{font:800 13px "Nunito",sans-serif;color:var(--muted);margin:0 2px 0 6px}
+#prog .part:first-child{margin-left:0}
+#prog button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:#fff;font:800 13px "Nunito",sans-serif;color:var(--muted);cursor:pointer;padding:0}
+#prog button:disabled{cursor:default;opacity:.5}
+#prog button.cur{border-color:var(--ink);color:#fff;background:var(--ink);opacity:1}
+#prog button.ok{border-color:var(--green);color:var(--green)}
+#prog button.shown{border-color:var(--heat);color:var(--heat)}
+#prog button.skip{border-style:dashed}
+#prog button.cur.ok,#prog button.cur.shown{color:#fff}
+
+/* Aufgabe */
+.unit{font:800 14px "Nunito",sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.chip{font:700 12px "Nunito",sans-serif;text-transform:none;letter-spacing:0;border:1.5px solid var(--line);border-radius:999px;padding:1px 9px;color:var(--muted);white-space:nowrap}
+.material{border:2px dashed var(--line);border-radius:12px;padding:12px 14px;margin:10px 0 14px;background:#FBFCFE}
+.material .mlabel{font:800 13px "Nunito",sans-serif;color:var(--blue);margin-bottom:4px}
+.material table{border-collapse:collapse;width:100%;margin-top:8px;font-size:.97rem}
+.material th{text-align:left;color:#1F4E79;font-weight:800;border-bottom:1.5px solid #1F4E79;padding:4px 8px}
+.material td{border-bottom:1px solid var(--line);padding:5px 8px}
+.material td.n{text-align:right;white-space:nowrap;font-weight:700}
+.ad{border:3px solid var(--heat);border-radius:12px;padding:12px 14px;text-align:center;background:#FFF5F0;transform:rotate(-1deg);max-width:440px;margin:6px auto}
+.ad b{font-size:1.35rem;display:block;color:var(--heat)}
+.chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.chain .box{border:2px solid var(--ink);border-radius:10px;padding:6px 10px;text-align:center;background:#fff;min-width:110px}
+.chain .box small{display:block;color:var(--muted)}
+.chain .ar{font-size:1.4rem;color:var(--muted)}
+.q{font-size:1.08rem;font-weight:700;margin:6px 0 10px}
+.lvl{display:inline-flex;gap:3px;vertical-align:middle;margin-left:8px}
+.lvl i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink);display:block}
+.lvl i.f{background:var(--ink)}
+.numrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.numrow input{width:160px;font:800 20px "Nunito",sans-serif;color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+.numrow .u{font-weight:800;font-size:1.1rem}
+input:focus,textarea:focus{outline:3px solid var(--marker);border-color:var(--ink)}
+.isok input{border-color:var(--green)!important;background:var(--ok-bg)}
+.isbad input{border-color:var(--heat)!important;background:var(--bad-bg)}
+.opts{display:grid;gap:8px}
+.opts.diag{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--line);border-radius:10px;cursor:pointer;background:#fff;min-height:44px;user-select:none;-webkit-user-select:none}
+.opt input{margin-top:4px;width:20px;height:20px;accent-color:var(--ink);flex:0 0 auto}
+.opt.diag{flex-direction:column;align-items:center}
+.opt.diag svg{width:100%;max-width:230px;height:auto}
+.opt:has(input:checked){border-color:var(--ink)}
+.opt.right{border-color:var(--green)!important;background:var(--ok-bg)}
+.opt.wrong{border-color:var(--heat)!important;background:var(--bad-bg)}
+table.tf{border-collapse:collapse;width:100%}
+table.tf th{font-size:.85rem;color:#1F4E79;border-bottom:1.5px solid #1F4E79;padding:4px 6px;text-align:center}
+table.tf th:first-child{text-align:left}
+table.tf td{border-bottom:1px solid var(--line);padding:6px}
+table.tf td.c{text-align:center;width:72px}
+table.tf input{width:24px;height:24px;accent-color:var(--ink)}
+table.tf tr.right td{background:var(--ok-bg)}
+table.tf tr.wrong td{background:var(--bad-bg)}
+textarea{width:100%;min-height:110px;font:17px/1.45 "Nunito",sans-serif;color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.btn{border:2px solid var(--ink);background:var(--marker);color:var(--ink);font:800 17px "Nunito",sans-serif;padding:10px 20px;border-radius:10px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);min-height:44px}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.ghost{background:#fff;box-shadow:none;font-weight:700}
+.btn:focus-visible,#prog button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.fb{margin-top:12px;border-radius:10px;padding:10px 14px;display:none}
+.fb.show{display:block}
+.fb.ok{background:var(--ok-bg);border:2px solid var(--green)}
+.fb.bad{background:var(--bad-bg);border:2px solid var(--heat)}
+.fb.tip{background:var(--hilfe);border:2px solid var(--hilfe-rand)}
+.fb.sol{background:#F2F2F2;border:2px solid #BFBFBF}
+.fb p{margin:4px 0}
+.slow{margin-top:10px;background:var(--hilfe);border:2px solid var(--hilfe-rand);border-radius:10px;padding:8px 12px;font-weight:700;display:none}
+.slow.show{display:block}
+.crit label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.crit input{width:22px;height:22px;accent-color:var(--green);flex:0 0 auto;margin-top:2px}
+.note{font-size:.93rem;color:var(--muted)}
+.foot{margin-top:28px;font-size:.88rem;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.hide{display:none!important}
+
+/* Rate-Wächter */
+#guard{position:fixed;inset:0;background:rgba(31,42,68,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#guard.show{display:flex}
+#guard .card{max-width:480px;margin:0;border-color:var(--heat);box-shadow:5px 5px 0 var(--heat)}
+#guard h2{color:var(--heat)}
+
+/* Übersicht */
+#sumView{display:none}
+body.summary .wrap{max-width:none;padding:8px}
+body.summary #quiz, body.summary #start, body.summary h1, body.summary .sub, body.summary #prog, body.summary .foot{display:none}
+body.summary #sumView{display:block}
+#fitBox{display:flex;justify-content:center;overflow:hidden}
+#sumCard{width:760px;flex:0 0 auto;background:#fff;border:2px solid var(--ink);border-radius:14px;padding:16px 18px 12px;transform-origin:top center;font-size:14px;line-height:1.35}
+#sumCard h2{font-family:"Patrick Hand",cursive;font-weight:400;font-size:2rem;margin:0;line-height:1.05}
+#sumCard .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2px solid #1F4E79;padding-bottom:6px}
+#sumCard .merk{margin:8px 0;padding:8px 12px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+#sumCard .merk .f{font-size:1.15rem}
+#sumCard table{border-collapse:collapse;width:100%}
+#sumCard th{text-align:left;color:#1F4E79;font-size:12px;border-bottom:1.5px solid #1F4E79;padding:3px 5px}
+#sumCard td{border-bottom:1px solid var(--line);padding:3px 5px;vertical-align:top}
+#sumCard td.nr{font-weight:800;white-space:nowrap;color:var(--muted)}
+#sumCard td.a{font-weight:800;color:var(--green);white-space:nowrap}
+#sumCard td.a.long{white-space:normal;font-weight:700;font-size:13px}
+#sumCard td.s{white-space:nowrap;text-align:center;font-size:13px}
+#sumCard tr.part td{background:#F4F7FB;font-weight:800;color:#1F4E79;font-size:12px;padding:2px 5px}
+#sumCard .stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;font-weight:700}
+#sumCard .stats .warn{color:var(--heat)}
+.sumhelp{max-width:760px;margin:14px auto 0;font-size:.95rem}
+@media (max-width:560px){h1{font-size:2rem}.numrow input{width:130px}}
+@media (prefers-reduced-motion:no-preference){.fb.show{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Wirkungsgrad-Check</h1>
+  <p class="sub">Physik Klasse 8 – Energie: Wie gut nutzt ein Gerät die Energie?</p>
+
+  <!-- START -->
+  <section id="start" class="card">
+    <h2>So geht's</h2>
+    <div class="merk">
+      <div><b>Wirkungsgrad</b> η (sprich: „eta“)</div>
+      <div class="f">η = <span class="frac"><span>E<sub>nutz</sub></span><span>E<sub>zu</sub></span></span> = <span class="frac"><span>Nutzenergie</span><span>zugeführte Energie</span></span></div>
+      <div class="note" style="color:var(--ink)">Beispiel: 150 J : 200 J = 0,75 = 75 %</div>
+    </div>
+    <ol class="steps">
+      <li><b>Teil A – Formel-Training:</b> vier Rechenaufgaben. Deine Zahlen sind anders als die deines Nachbarn.</li>
+      <li><b>Teil B – Aufgaben wie im Test:</b> Lies zuerst das <b>Material</b> genau, dann die Frage.</li>
+      <li>Rechne auf deinem Blatt oder in OneNote mit. Pro Frage hast du <b>zwei Versuche</b>. Nach dem ersten Fehler bekommst du einen Tipp.</li>
+      <li>Fragen mit <span class="lvl"><i class="f"></i><i class="f"></i><i class="f"></i></span> sind für Profis. Du darfst sie überspringen.</li>
+      <li>Am Ende bekommst du eine <b>Übersicht mit allen Fragen und richtigen Antworten</b>. Davon machst du einen Screenshot für dein OneNote.</li>
+    </ol>
+    <p class="slow show" style="margin-top:12px">Wichtig: Die App merkt, wenn du nur rätst. Dann musst du kurz Pause machen – und es steht in deiner Übersicht.</p>
+    <div class="actions"><button class="btn" id="go">Los geht's</button></div>
+  </section>
+
+  <div id="prog" class="hide" aria-label="Fortschritt"></div>
+  <main id="quiz" class="hide"></main>
+
+  <section id="sumView">
+    <div id="fitBox"><div id="sumCard"></div></div>
+    <div class="sumhelp card">
+      <p style="margin-top:0"><b>So kommt die Übersicht in dein OneNote:</b></p>
+      <ol class="steps">
+        <li>Scrolle ganz nach oben, sodass die Übersicht den Bildschirm füllt.</li>
+        <li>Mach einen Screenshot: obere Taste und Lauter-Taste gleichzeitig drücken.</li>
+        <li>Öffne in OneNote deine Seite „Wirkungsgrad“ und füge das Bild ein (Fotos-App → Teilen → OneNote oder Bild kopieren und einfügen).</li>
+      </ol>
+      <div class="actions"><button class="btn ghost" id="backToQuiz">Aufgaben nochmal ansehen</button></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Deine Antworten werden nur auf diesem Gerät gespeichert. · <a href="index.html">Alle Apps</a></span>
+    <button class="btn ghost" id="reset" style="padding:4px 10px;font-size:.88rem;min-height:0">Neu starten</button>
+  </div>
+</div>
+
+<div id="guard" role="alertdialog" aria-modal="true" aria-labelledby="gTitle">
+  <div class="card">
+    <h2 id="gTitle">Moment mal – rätst du gerade?</h2>
+    <p id="gText">Du hast mehrmals sehr schnell eine falsche Antwort gegeben.</p>
+    <p><b>Raten hilft dir nicht weiter</b> – in der Klassenarbeit gibt es keinen zweiten Versuch. So geht es besser:</p>
+    <ol class="steps">
+      <li>Lies das Material und die Frage noch einmal Wort für Wort.</li>
+      <li>Schreib die Formel auf: η = E<sub>nutz</sub> : E<sub>zu</sub></li>
+      <li>Setz die Zahlen ein und rechne mit dem Taschenrechner.</li>
+    </ol>
+    <p class="note">Dieser Hinweis wird in deiner Übersicht vermerkt.</p>
+    <div class="actions"><button class="btn" id="gOk" disabled>Weiter in 10 s</button></div>
+  </div>
+</div>
+
+<script>
+/* ================= Hilfsfunktionen ================= */
+const $ = s => document.querySelector(s);
+const fmt = n => { const r = Math.round(n*1000)/1000; return String(r).replace(".", ","); };
+const num = v => { if (v == null) return NaN; let s = String(v).trim().replace(/\s/g,"").replace(/%|J|kJ/gi,""); s = s.replace(",", "."); return s === "" || !/^-?\d*\.?\d+$/.test(s) ? NaN : parseFloat(s); };
+const words = html => (html || "").replace(/<[^>]+>/g," ").split(/\s+/).filter(Boolean).length;
+const pick = (rnd, arr) => arr[Math.floor(rnd() * arr.length)];
+function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(rnd, n){ const a = [...Array(n).keys()]; for (let i = n-1; i > 0; i--){ const j = Math.floor(rnd()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+const lvlHtml = n => `<span class="lvl" aria-label="Niveau ${n} von 3">${[0,1,2].map(i => `<i class="${i<n?"f":""}"></i>`).join("")}</span>`;
+const ETA = `η = <span class="frac"><span>E<sub>nutz</sub></span><span>E<sub>zu</sub></span></span>`;
+
+/* Energieflussdiagramm (nur Form, keine Zahlen) */
+function flowSVG(use){
+  const H = 100, x0 = 50, y0 = 22, gh = H*use, t = H - gh, ri = 6, R = t + ri, yEnd = 168;
+  const green = `<path d="M${x0} ${y0} H170 V${y0-7} L194 ${y0+gh/2} L170 ${y0+gh+7} V${y0+gh} H${x0} Z" fill="#2E9E5B"/>`;
+  const red = t > 0 ? `<path d="M${x0} ${y0+gh} A${R} ${R} 0 0 1 ${x0+R} ${y0+gh+R} V${yEnd} H${x0+R+7} L${x0+ri+t/2} ${yEnd+16} L${x0+ri-7} ${yEnd} H${x0+ri} V${y0+gh+R} A${ri} ${ri} 0 0 0 ${x0} ${y0+H} Z" fill="#E4572E"/>` : "";
+  return `<svg viewBox="0 0 230 196" role="img" aria-label="Energieflussdiagramm">
+    <rect x="8" y="${y0}" width="${x0-8}" height="${H}" fill="#3B6FB6"/>
+    ${green}${red}
+    <text x="8" y="${y0+H+16}" font-size="12" fill="#3B6FB6" font-weight="700">Strom</text>
+    <text x="120" y="${y0-8}" font-size="12" fill="#2E9E5B" font-weight="700">Licht</text>
+    <text x="${x0+R+12}" y="${yEnd-6}" font-size="12" fill="#E4572E" font-weight="700">Wärme</text>
+  </svg>`;
+}
+
+/* ================= Zustand ================= */
+const KEY = "ef-wirkungsgrad-v1";
+let S;
+function freshState(){ return { seed: (Math.random()*2**31)|0, cur: 0, max: 0, items: {}, flags: 0, recent: [], seenUnits: {}, started: false, done: false, date: new Date().toISOString() }; }
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
+if (!S || typeof S.seed !== "number") S = freshState();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+
+/* ================= Aufgaben ================= */
+const rnd = mulberry(S.seed);
+const DEV = [
+  {n:"Ein Elektromotor", k:"Elektromotor", p:"er", f:"elektrische Energie", u:"Bewegungsenergie", etas:[75,80,85,90]},
+  {n:"Eine Solarzelle", k:"Solarzelle", p:"sie", f:"Lichtenergie", u:"elektrische Energie", etas:[15,20,25]},
+  {n:"Ein Benzinmotor", k:"Benzinmotor", p:"er", f:"chemische Energie", u:"Bewegungsenergie", etas:[25,30,35]},
+  {n:"Ein Wasserkocher", k:"Wasserkocher", p:"er", f:"elektrische Energie", u:"Wärme im Wasser", etas:[85,90,95]},
+  {n:"Ein Fahrraddynamo", k:"Fahrraddynamo", p:"er", f:"Bewegungsenergie", u:"elektrische Energie", etas:[55,60,65,70]},
+  {n:"Ein Handy-Ladegerät", k:"Ladegerät", p:"es", f:"elektrische Energie", u:"Energie im Akku", etas:[70,75,80]}
+];
+const ZU = [200, 400, 500, 600, 800, 1000];
+const order = shuffle(rnd, DEV.length);
+const gen = () => { const d = DEV[order.shift()]; const eta = pick(rnd, d.etas), zu = pick(rnd, ZU); return {d, eta, zu, nu: zu*eta/100}; };
+const A = [gen(), gen(), gen(), gen()];
+const pct = (a,b) => Math.round(a/b*1000)/10;
+
+const UNITS = [
+ { id:"A", part:"A", title:"Formel-Training", material:null, items:[
+   (()=>{ const {d,eta,zu,nu} = A[0]; return {
+     id:"A1", lvl:1, comp:"Fachwissen · AFB I", type:"num", u:"%", ans:eta, tol:0.05,
+     q:`${d.n} bekommt <b>${zu} J</b> ${d.f}. Daraus macht ${d.p} <b>${nu} J</b> ${d.u}.<br>Berechne den Wirkungsgrad in Prozent.`,
+     errs:[{v:pct(zu,nu), m:"Du hast die Zahlen vertauscht. Oben in den Bruch gehört die <b>Nutzenergie</b>, unten die zugeführte Energie."},
+           {v:eta/100, m:"Das ist die Dezimalzahl. Gefragt ist der Wert in <b>Prozent</b>: mal 100."},
+           {v:100-eta, m:"Das ist der Anteil, der <b>entwertet</b> wird. Gesucht ist der genutzte Anteil."},
+           {v:zu-nu, m:"Das ist die entwertete Energie in Joule. Gesucht ist der Wirkungsgrad: E<sub>nutz</sub> : E<sub>zu</sub>."}],
+     tip:`Setz ein: η = ${nu} J : ${zu} J. Das Ergebnis nimmst du mal 100.`,
+     why:`η = ${nu} J : ${zu} J = ${fmt(eta/100)} = <b>${eta} %</b>`,
+     sq:`${d.k}: ${zu} J zugeführt, ${nu} J genutzt – η in %?`, sa:`${eta} %`};})(),
+   (()=>{ const {d,eta,zu,nu} = A[1]; return {
+     id:"A2", lvl:1, comp:"Fachwissen · AFB I", type:"num", u:"", ans:eta/100, tol:0.0005,
+     q:`${d.n} bekommt <b>${zu} J</b> ${d.f} und macht daraus <b>${nu} J</b> ${d.u}.<br>Gib den Wirkungsgrad als <b>Dezimalzahl</b> an (ohne Prozent).`,
+     errs:[{v:eta, m:"Das ist der Wert in Prozent. Gefragt ist die <b>Dezimalzahl</b> – also das Ergebnis der Division, ohne mal 100."},
+           {v:Math.round(zu/nu*1000)/1000, m:"Du hast die Zahlen vertauscht. Ein Wirkungsgrad ist nie größer als 1."},
+           {v:(100-eta)/100, m:"Das ist der Anteil, der entwertet wird. Gesucht ist der genutzte Anteil."}],
+     tip:`Rechne ${nu} : ${zu} mit dem Taschenrechner.`,
+     why:`η = ${nu} J : ${zu} J = <b>${fmt(eta/100)}</b> (das sind ${eta} %)`,
+     sq:`${d.k}: ${zu} J zugeführt, ${nu} J genutzt – η als Dezimalzahl?`, sa:fmt(eta/100)};})(),
+   (()=>{ const {d,eta,zu,nu} = A[2]; return {
+     id:"A3", lvl:2, comp:"Fachwissen · AFB II", type:"num", u:"J", ans:nu, tol:0.01,
+     q:`${d.n} hat einen Wirkungsgrad von <b>${eta} %</b>. ${d.p[0].toUpperCase()+d.p.slice(1)} bekommt <b>${zu} J</b> ${d.f}.<br>Wie viel Joule ${d.u} entstehen?`,
+     errs:[{v:zu-nu, m:"Das ist die entwertete Energie. Gesucht ist die <b>Nutzenergie</b>."},
+           {v:zu*eta, m:`Fast! ${eta} % ist nicht ${eta}, sondern ${fmt(eta/100)}. Teile noch durch 100.`},
+           {v:Math.round(zu/eta*100*10)/10, m:"Du hast geteilt. Hier musst du <b>malnehmen</b>: E<sub>nutz</sub> = η · E<sub>zu</sub>."},
+           {v:zu-eta, m:`Prozent und Joule kann man nicht einfach abziehen. Rechne ${fmt(eta/100)} · ${zu} J.`}],
+     tip:`${eta} % heißt: Von 100 J werden ${eta} J genutzt. Rechne ${fmt(eta/100)} · ${zu} J.`,
+     why:`E<sub>nutz</sub> = η · E<sub>zu</sub> = ${fmt(eta/100)} · ${zu} J = <b>${nu} J</b>`,
+     sq:`${d.k}: η = ${eta} %, ${zu} J zugeführt – Nutzenergie?`, sa:`${nu} J`};})(),
+   (()=>{ const {d,eta,zu,nu} = A[3]; return {
+     id:"A4", lvl:3, comp:"Fachwissen · AFB II", type:"num", u:"J", ans:zu, tol:0.01,
+     q:`${d.n} soll <b>${nu} J</b> ${d.u} liefern. Der Wirkungsgrad ist <b>${eta} %</b>.<br>Wie viel Joule ${d.f} muss man zuführen?`,
+     errs:[{v:Math.round(nu*eta)/100, m:"Du hast malgenommen. Die zugeführte Energie muss aber <b>größer</b> sein als die Nutzenergie."},
+           {v:Math.round(nu/eta*100)/100, m:`Fast! ${eta} % ist ${fmt(eta/100)}. Teile durch ${fmt(eta/100)}, nicht durch ${eta}.`},
+           {v:nu+eta, m:"Prozent und Joule kann man nicht addieren. Stell die Formel um: E<sub>zu</sub> = E<sub>nutz</sub> : η."}],
+     tip:`Stell die Formel um: E<sub>zu</sub> = E<sub>nutz</sub> : η = ${nu} J : ${fmt(eta/100)}`,
+     why:`E<sub>zu</sub> = E<sub>nutz</sub> : η = ${nu} J : ${fmt(eta/100)} = <b>${zu} J</b><br>Probe: ${nu} J : ${zu} J = ${fmt(eta/100)} ✓`,
+     sq:`${d.k}: soll ${nu} J liefern, η = ${eta} % – zugeführte Energie?`, sa:`${zu} J`};})()
+ ]},
+
+ { id:"B1", part:"B", title:"Wasser kochen – aber womit?",
+   material:`<div class="mlabel">Material</div>
+   Lina will herausfinden, womit man Wasser am sparsamsten heiß macht. Sie erhitzt dreimal je <b>1 Liter Wasser</b> von 20 °C auf 100 °C.
+   Ein Messgerät an der Steckdose zeigt, wie viel elektrische Energie jedes Gerät dafür braucht.
+   Das Wasser nimmt jedes Mal <b>336 kJ</b> Wärme auf.
+   <table><tr><th>Gerät</th><th style="text-align:right">elektrische Energie aus der Steckdose</th></tr>
+   <tr><td>Wasserkocher</td><td class="n">400 kJ</td></tr>
+   <tr><td>Mikrowelle</td><td class="n">480 kJ</td></tr>
+   <tr><td>Herdplatte mit Topf</td><td class="n">600 kJ</td></tr></table>
+   <div class="note" style="margin-top:6px">1 kJ (Kilojoule) = 1000 J</div>`,
+   items:[
+   { id:"B1a", lvl:1, comp:"Fachwissen · AFB I", type:"num", u:"%", ans:70, tol:0.05,
+     q:"Berechne den Wirkungsgrad der Mikrowelle in Prozent.",
+     errs:[{v:142.9, tol:0.2, m:"Du hast die Zahlen vertauscht. Oben steht die Nutzenergie – das ist die Wärme im Wasser."},
+           {v:0.7, m:"Das ist die Dezimalzahl. Gefragt ist der Wert in <b>Prozent</b>."},
+           {v:30, m:"Das ist der Anteil, der die Küche heizt. Gesucht ist der genutzte Anteil."},
+           {v:144, m:"Das ist die entwertete Energie in kJ. Gesucht ist der Wirkungsgrad."}],
+     tip:"Nutzenergie = Wärme im Wasser = 336 kJ. Zugeführt wird die Energie aus der Steckdose.",
+     why:"η = 336 kJ : 480 kJ = 0,7 = <b>70 %</b>",
+     sq:"Wasser kochen: Wirkungsgrad der Mikrowelle (336 kJ von 480 kJ)?", sa:"70 %"},
+   { id:"B1b", lvl:1, comp:"Erkenntnisgewinnung · AFB II", type:"mc",
+     q:"Welches Gerät hat den <b>kleinsten</b> Wirkungsgrad?",
+     opts:["die Herdplatte mit Topf","die Mikrowelle","der Wasserkocher","Alle gleich – das Wasser bekommt ja immer 336 kJ."], ans:0,
+     tip:"Alle geben dem Wasser 336 kJ. Welches Gerät braucht dafür am meisten Energie aus der Steckdose?",
+     why:"Wasserkocher 336 : 400 = 84 %, Mikrowelle 70 %, <b>Herdplatte 336 : 600 = 56 %</b>. Gleich viel Nutzen, aber am meisten Aufwand.",
+     sq:"Wasser kochen: Welches Gerät hat den kleinsten Wirkungsgrad?", sa:"Herdplatte (56 %)"},
+   { id:"B1c", lvl:2, comp:"Kommunikation · AFB II", type:"tf",
+     q:"Kreuze an: Ist die Aussage richtig oder falsch?",
+     rows:[["Alle drei Geräte geben dem Wasser gleich viel Energie.", true],
+           ["Bei der Herdplatte wird am meisten Energie an die Küche abgegeben.", true],
+           ["Beim Wasserkocher wird keine Energie entwertet.", false],
+           ["Je mehr Energie ein Gerät aufnimmt, desto größer ist sein Wirkungsgrad.", false]],
+     tip:"Rechne für jedes Gerät aus: Energie aus der Steckdose minus 336 kJ. So viel heizt die Küche.",
+     why:"richtig – richtig (600 − 336 = 264 kJ) – falsch (auch dort heizen 64 kJ die Küche) – falsch (die Herdplatte nimmt am meisten auf und hat den kleinsten Wirkungsgrad).",
+     sq:"Wasser kochen: vier Aussagen richtig oder falsch?", sa:"r · r · f · f"},
+   { id:"B1d", lvl:2, comp:"Bewertung · AFB III", type:"text",
+     q:"Tom sagt: „Die Herdplatte ist das beste Gerät. Sie steckt die meiste Energie ins Kochen.“<br>Beurteile Toms Aussage. Begründe mit Zahlen aus dem Material.",
+     muster:"Tom hat nicht recht. Die Herdplatte nimmt zwar am meisten Energie auf (600 kJ), aber das Wasser bekommt trotzdem nur 336 kJ – genauso viel wie bei den anderen Geräten. Ihr Wirkungsgrad ist mit 56 % am kleinsten, 264 kJ heizen nur die Küche. Am besten ist der Wasserkocher mit 84 %.",
+     crit:["Ich sage klar, ob Tom recht hat.","Ich vergleiche mit Zahlen (Wirkungsgrad oder Energie fürs Wasser).","Ich nenne das bessere Gerät."],
+     sq:"Wasser kochen: Hat Tom recht („Herdplatte ist am besten“)?", sa:"Nein: gleich viel Nutzen (336 kJ), aber η nur 56 %. Wasserkocher am besten (84 %)."}
+ ]},
+
+ { id:"B2", part:"B", title:"Licht fürs Zimmer",
+   material:`<div class="mlabel">Material</div>
+   Die Tabelle zeigt, welcher Anteil der elektrischen Energie bei verschiedenen Lampen zu Licht wird.
+   <table><tr><th>Lampe</th><th style="text-align:right">Wirkungsgrad η</th></tr>
+   <tr><td>Glühlampe</td><td class="n">5 %</td></tr>
+   <tr><td>Halogenlampe</td><td class="n">10 %</td></tr>
+   <tr><td>LED-Lampe</td><td class="n">35 %</td></tr></table>`,
+   items:[
+   { id:"B2a", lvl:1, comp:"Kommunikation · AFB II", type:"diag",
+     q:"Welches Energieflussdiagramm gehört zur <b>Halogenlampe</b>?",
+     vals:[0.10, 0.90, 0.35], ans:0,
+     tip:"Bei η = 10 % ist der grüne Licht-Pfeil nur ein Zehntel so breit wie der blaue Pfeil.",
+     why:"Bei η = 10 % ist der Licht-Pfeil sehr schmal (1 von 10 Teilen), der Wärme-Pfeil sehr breit (9 von 10).",
+     sq:"Lampen: Welches Diagramm gehört zur Halogenlampe (η = 10 %)?", sa:"schmaler grüner, breiter roter Pfeil"},
+   { id:"B2b", lvl:2, comp:"Fachwissen · AFB II", type:"num", u:"J", ans:840, tol:0.01,
+     q:"Die LED-Lampe bekommt <b>2400 J</b> elektrische Energie. Wie viel Joule Licht gibt sie ab?",
+     errs:[{v:1560, m:"Das ist die Wärme. Gesucht ist das <b>Licht</b>."},
+           {v:84000, m:"Fast! 35 % ist 0,35 – nicht 35. Teile noch durch 100."},
+           {v:68.6, tol:0.2, m:"Du hast geteilt. Hier musst du malnehmen: E<sub>nutz</sub> = η · E<sub>zu</sub>."},
+           {v:35, m:"35 % ist der Anteil. Rechne aus, wie viel Joule das von 2400 J sind."}],
+     tip:"Von 100 J macht die LED 35 J Licht. Rechne 0,35 · 2400 J.",
+     why:"E<sub>nutz</sub> = 0,35 · 2400 J = <b>840 J</b> Licht",
+     sq:"Lampen: LED (35 %) bekommt 2400 J – wie viel Licht?", sa:"840 J"},
+   { id:"B2c", lvl:3, comp:"Erkenntnisgewinnung · AFB III", type:"mc",
+     q:"LED-Lampe und Glühlampe sollen gleich hell leuchten. Jede soll <b>35 J Licht</b> abgeben.<br>Wie viel elektrische Energie braucht die <b>Glühlampe</b> dafür?",
+     opts:["700 J","100 J","175 J","1,75 J"], ans:0,
+     tip:"Bei der Glühlampe werden nur 5 von 100 J zu Licht. Wie oft passen 5 J in 35 J?",
+     why:"E<sub>zu</sub> = 35 J : 0,05 = <b>700 J</b>. Die LED braucht nur 100 J – die Glühlampe braucht 7-mal so viel.",
+     sq:"Lampen: Glühlampe soll 35 J Licht geben – wie viel Energie braucht sie?", sa:"700 J (LED: 100 J)"}
+ ]},
+
+ { id:"B3", part:"B", title:"Der Wunder-Motor",
+   material:`<div class="mlabel">Material</div>
+   <div class="ad"><b>NEU: SUPER-MOTOR X</b>Wirkungsgrad 120 %!<br>Macht aus 100 J Strom satte 120 J Bewegung.<br>Nie wieder Energie verschwenden!</div>`,
+   items:[
+   { id:"B3a", lvl:1, comp:"Fachwissen · AFB II", type:"mc",
+     q:"Warum kann die Werbung nicht stimmen?",
+     opts:["Energie kann nicht aus dem Nichts entstehen. Aus 100 J können höchstens 100 J werden – und ein Teil wird immer entwertet.",
+           "Motoren haben immer einen Wirkungsgrad von genau 100 %.",
+           "Den Wirkungsgrad gibt man in Joule an, nicht in Prozent.",
+           "Bewegungsenergie kann man nicht messen."], ans:0,
+     tip:"Denk an die letzte Stunde: Was gilt für die Energie bei jeder Umwandlung?",
+     why:"Energieerhaltung: Die Nutzenergie kann nie größer sein als die zugeführte Energie. Weil immer Wärme entsteht, ist η immer <b>kleiner als 100 %</b>.",
+     sq:"Wunder-Motor: Warum gibt es kein η = 120 %?", sa:"Energie entsteht nicht aus dem Nichts → η immer kleiner als 100 %"},
+   { id:"B3b", lvl:2, comp:"Kommunikation · AFB II", type:"mc",
+     q:"Lena prüft einen echten Motor: Er bekommt 200 J und gibt 150 J Bewegungsenergie ab. Sie rechnet:<br><span style=\"font-weight:400\">η = 200 J : 150 J ≈ 1,33 = 133 %</span><br>Was hat Lena falsch gemacht?",
+     opts:["Sie hat Nutzenergie und zugeführte Energie vertauscht.",
+           "Sie hätte 200 J − 150 J rechnen müssen.",
+           "Sie hätte nicht mal 100 nehmen dürfen.",
+           "Nichts – ein guter Motor kann 133 % haben."], ans:0,
+     tip:"Was gehört in der Formel nach oben, was nach unten?",
+     why:"Oben steht die Nutzenergie (150 J), unten die zugeführte Energie (200 J). Lena hat es umgedreht.",
+     sq:"Wunder-Motor: Lenas Fehler bei η = 200 J : 150 J?", sa:"vertauscht: E<sub>nutz</sub> gehört nach oben"},
+   { id:"B3c", lvl:1, comp:"Fachwissen · AFB I", type:"num", u:"%", ans:75, tol:0.05,
+     q:"Berechne den richtigen Wirkungsgrad von Lenas Motor (200 J zugeführt, 150 J genutzt) in Prozent.",
+     errs:[{v:133.3, tol:0.5, m:"Das ist Lenas falsches Ergebnis. Dreh den Bruch um."},
+           {v:0.75, m:"Das ist die Dezimalzahl. Gefragt ist der Wert in Prozent."},
+           {v:25, m:"Das ist der entwertete Anteil."}],
+     tip:"η = 150 J : 200 J",
+     why:"η = 150 J : 200 J = 0,75 = <b>75 %</b>",
+     sq:"Wunder-Motor: richtiger Wirkungsgrad von Lenas Motor?", sa:"75 %"}
+ ]},
+
+ { id:"B4", part:"B", title:"Vom Kraftwerk bis zur Lampe",
+   material:`<div class="mlabel">Material</div>
+   Aus der letzten Stunde kennst du diese Energiekette. Im Kraftwerk werden <b>1000 J</b> chemische Energie (Kohle) eingesetzt.
+   <div class="chain"><div class="box">Kohlekraftwerk<small>η = 40 %</small></div><span class="ar">→</span><div class="box">Leitungen<small>η = 90 %</small></div><span class="ar">→</span><div class="box">LED-Lampe<small>η = 35 %</small></div><span class="ar">→</span><div class="box" style="border-color:#2E9E5B">Licht</div></div>`,
+   items:[
+   { id:"B4a", lvl:3, comp:"Fachwissen · AFB II", type:"num", u:"J", ans:360, tol:0.01,
+     q:"Wie viel Joule elektrische Energie kommen an der LED-Lampe an?",
+     errs:[{v:400, m:"Das kommt aus dem Kraftwerk heraus. Aber auch in den Leitungen wird Energie entwertet."},
+           {v:900, m:"Du hast das Kraftwerk vergessen. Fang bei 1000 J an."},
+           {v:126, m:"Das ist schon das Licht. Gefragt ist die Energie, die an der Lampe <b>ankommt</b>."}],
+     tip:"Schritt für Schritt: 0,40 · 1000 J = ? Davon kommen 90 % durch die Leitungen.",
+     why:"0,40 · 1000 J = 400 J; 0,90 · 400 J = <b>360 J</b>",
+     sq:"Kette: Wie viel Energie kommt an der LED an (von 1000 J)?", sa:"360 J"},
+   { id:"B4b", lvl:3, comp:"Erkenntnisgewinnung · AFB III", type:"num", u:"%", ans:12.6, tol:0.45,
+     q:"Wie groß ist der Wirkungsgrad der <b>ganzen Kette</b> – von der Kohle bis zum Licht – in Prozent?",
+     errs:[{v:165, m:"Wirkungsgrade darf man nicht addieren – über 100 % ist unmöglich!"},
+           {v:55, m:"Das ist der Durchschnitt. Rechne lieber aus, wie viel Joule Licht am Ende aus 1000 J werden."},
+           {v:35, m:"Das ist nur die LED. Gefragt ist die ganze Kette ab dem Kraftwerk."},
+           {v:126, m:"Das sind die Joule Licht. Jetzt noch: 126 J von 1000 J – wie viel Prozent?"}],
+     tip:"Rechne zuerst das Licht aus: 0,35 · 360 J. Dann: Licht : 1000 J.",
+     why:"Licht: 0,35 · 360 J = 126 J. η = 126 J : 1000 J = 0,126 = <b>12,6 %</b><br>Kurz: 0,40 · 0,90 · 0,35 = 0,126",
+     sq:"Kette: Wirkungsgrad von der Kohle bis zum Licht?", sa:"12,6 %"}
+ ]}
+];
+
+const ITEMS = [];
+UNITS.forEach(u => u.items.forEach((it, k) => { it.unit = u; it.first = k === 0; ITEMS.push(it); }));
+// Reihenfolge der Antwortmöglichkeiten pro Schüler mischen (fest über den Seed)
+ITEMS.forEach(it => { if (it.type === "mc" || it.type === "diag") it.order = shuffle(rnd, (it.opts || it.vals).length); });
+
+const st = id => S.items[id] || (S.items[id] = { tries: 0, status: "open" });
+const isDone = s => ["ok1","ok2","shown","skip","text"].includes(s.status);
+
+/* ================= Rate-Wächter =================
+   Verdächtig ist eine FALSCHE Antwort, die schneller kam, als man zum Lesen
+   (und Rechnen) braucht. Einmal verdächtig → leiser Hinweis.
+   Zweimal verdächtig unter den letzten vier Antworten → Pause-Fenster. */
+let shownAt = Date.now(), firstLook = false;
+function needSeconds(it, retry){
+  if (retry) return 4;
+  let w = words(it.q) + (it.type === "mc" || it.type === "diag" ? words((it.opts||[]).join(" ")) : 0) + (it.type === "tf" ? words(it.rows.map(r=>r[0]).join(" ")) : 0);
+  if (firstLook && it.unit.material) w += words(it.unit.material) * 0.6;
+  let s = w * 0.2 + (it.type === "num" ? 4 : 0);
+  return Math.max(it.type === "num" ? 6 : 4, Math.min(22, s));
+}
+function guardCheck(it, correct, retry){
+  const dt = (Date.now() - shownAt) / 1000;
+  const sus = !correct && dt < needSeconds(it, retry);
+  S.recent.push(sus); if (S.recent.length > 4) S.recent.shift();
+  if (sus && S.recent.filter(Boolean).length >= 2){ S.recent = []; openGuard("Du hast mehrmals sehr schnell eine falsche Antwort gegeben."); return "modal"; }
+  return sus ? "soft" : "";
+}
+function openGuard(text){
+  S.flags++; save();
+  $("#gText").textContent = text;
+  const b = $("#gOk"); let n = 10; b.disabled = true; b.textContent = `Weiter in ${n} s`;
+  $("#guard").classList.add("show");
+  const t = setInterval(() => { n--; if (n <= 0){ clearInterval(t); b.disabled = false; b.textContent = "Ich lese nochmal in Ruhe"; b.focus(); } else b.textContent = `Weiter in ${n} s`; }, 1000);
+}
+$("#gOk").onclick = () => { $("#guard").classList.remove("show"); shownAt = Date.now(); };
+function looksLikeNonsense(t){
+  const w = t.trim().split(/\s+/).filter(x => /[a-zäöüß]{2,}/i.test(x));
+  if (w.length < 6) return true;
+  if (new Set(w.map(x => x.toLowerCase())).size < w.length * 0.5) return true;
+  if (/(.)\1{3,}/.test(t)) return true;
+  const bad = w.filter(x => !/[aeiouäöüy]/i.test(x)).length;
+  return bad > w.length * 0.3;
+}
+
+/* ================= Anzeige ================= */
+function renderProg(){
+  const p = $("#prog"); p.innerHTML = "";
+  let part = "";
+  ITEMS.forEach((it, i) => {
+    if (it.unit.part !== part){ part = it.unit.part; const s = document.createElement("span"); s.className = "part"; s.textContent = "Teil " + part; p.appendChild(s); }
+    const s = st(it.id), b = document.createElement("button");
+    b.textContent = it.id.replace(/^B\d/, m => m.slice(1)).replace(/^A/, "");
+    b.title = it.id; b.setAttribute("aria-label", "Aufgabe " + it.id);
+    b.className = (i === S.cur ? "cur " : "") + (s.status === "ok1" || s.status === "ok2" || s.status === "text" ? "ok" : s.status === "shown" ? "shown" : s.status === "skip" ? "skip" : "");
+    b.disabled = i > S.max;
+    b.onclick = () => { S.cur = i; save(); render(); };
+    p.appendChild(b);
+  });
+}
+
+function render(){
+  renderProg();
+  const it = ITEMS[S.cur], s = st(it.id), u = it.unit, done = isDone(s);
+  firstLook = !S.seenUnits[u.id]; S.seenUnits[u.id] = true; save();
+  shownAt = Date.now();
+  let h = `<section class="card">
+    <div class="unit"><span>${u.part === "A" ? "Teil A · " : "Teil B · "}${u.title}</span><span class="chip">${it.comp}</span></div>
+    ${u.material ? `<div class="material">${u.material}</div>` : ""}
+    <div class="q">${it.id} ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
+  if (it.type === "num"){
+    h += `<div class="numrow" id="nr"><input id="inp" inputmode="decimal" autocomplete="off" aria-label="Deine Antwort" ${done ? "disabled" : ""} value="${s.val != null ? String(s.val).replace(/"/g,"") : ""}"><span class="u">${it.u}</span></div>`;
+  } else if (it.type === "mc" || it.type === "diag"){
+    h += `<div class="opts ${it.type === "diag" ? "diag" : ""}">` + it.order.map(k => `<label class="opt ${it.type === "diag" ? "diag" : ""}" data-k="${k}"><input type="radio" name="mc" value="${k}" ${done ? "disabled" : ""} ${s.val == k ? "checked" : ""}>${it.type === "diag" ? flowSVG(it.vals[k]) : `<span>${it.opts[k]}</span>`}</label>`).join("") + `</div>`;
+  } else if (it.type === "tf"){
+    h += `<table class="tf"><tr><th>Aussage</th><th>richtig</th><th>falsch</th></tr>` + it.rows.map((r, k) => `<tr data-k="${k}"><td>${r[0]}</td><td class="c"><input type="radio" name="tf${k}" value="1" ${done ? "disabled" : ""} ${s.val && s.val[k] === 1 ? "checked" : ""} aria-label="richtig"></td><td class="c"><input type="radio" name="tf${k}" value="0" ${done ? "disabled" : ""} ${s.val && s.val[k] === 0 ? "checked" : ""} aria-label="falsch"></td></tr>`).join("") + `</table>`;
+  } else if (it.type === "text"){
+    h += `<textarea id="ta" placeholder="Schreib deine Antwort in ganzen Sätzen …" ${s.revealed ? "disabled" : ""}>${(s.val || "").replace(/</g,"&lt;")}</textarea>`;
+  }
+  h += `<div class="slow" id="slow">Das ging sehr schnell. Lies die Aufgabe in Ruhe – raten bringt dich nicht weiter.</div>
+    <div class="fb" id="fb"></div>
+    <div class="actions" id="act"></div></section>`;
+  $("#quiz").innerHTML = h;
+  if (it.type === "text"){ const ta = $("#ta"); ta.oninput = () => { s.val = ta.value; save(); }; }
+  if (it.type === "num"){ const inp = $("#inp"); inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); }); }
+  if (done || s.revealed) showFinished(); else showActions();
+  window.scrollTo({top: 0});
+}
+
+function showActions(){
+  const it = ITEMS[S.cur], s = st(it.id);
+  let a = "";
+  if (it.type === "text") a = `<button class="btn" id="chk">Musterlösung zeigen</button>`;
+  else a = `<button class="btn" id="chk">Prüfen</button>`;
+  if (it.lvl === 3) a += `<button class="btn ghost" id="skip">Profi-Aufgabe überspringen</button>`;
+  $("#act").innerHTML = a;
+  $("#chk").onclick = check;
+  if ($("#skip")) $("#skip").onclick = () => { s.status = "skip"; next(); };
+  if (s.tries === 1 && it.tip){ fb("tip", `<p><b>Tipp:</b> ${it.tip}</p>`); }
+}
+
+function fb(kind, html){ const f = $("#fb"); f.className = "fb show " + kind; f.innerHTML = html; }
+
+function read(it){
+  if (it.type === "num") return $("#inp").value;
+  if (it.type === "mc" || it.type === "diag"){ const r = document.querySelector('input[name="mc"]:checked'); return r ? +r.value : null; }
+  if (it.type === "tf") return it.rows.map((_, k) => { const r = document.querySelector(`input[name="tf${k}"]:checked`); return r ? +r.value : null; });
+}
+
+function check(){
+  const it = ITEMS[S.cur], s = st(it.id);
+  $("#slow").classList.remove("show");
+  if (it.type === "text") return checkText(it, s);
+  const v = read(it);
+  if (it.type === "num" && isNaN(num(v))){ fb("tip", "<p>Gib eine Zahl ein, zum Beispiel <b>45</b> oder <b>0,45</b>.</p>"); return; }
+  if ((it.type === "mc" || it.type === "diag") && v === null){ fb("tip", "<p>Wähle eine Antwort aus.</p>"); return; }
+  if (it.type === "tf" && v.includes(null)){ fb("tip", "<p>Kreuze bei <b>jeder</b> Aussage richtig oder falsch an.</p>"); return; }
+
+  let ok, detail = "";
+  if (it.type === "num"){
+    const x = num(v); ok = Math.abs(x - it.ans) <= (it.tol || 0.01) + 1e-9;
+    if (!ok){ const e = (it.errs || []).find(e => Math.abs(x - e.v) <= (e.tol || 0.01) * Math.max(1, Math.abs(e.v)) + 1e-9); if (e) detail = e.m; }
+    $("#nr").className = "numrow " + (ok ? "isok" : "isbad");
+  } else if (it.type === "mc" || it.type === "diag"){
+    ok = v === it.ans;
+    document.querySelectorAll(".opt").forEach(l => l.classList.remove("wrong"));
+    document.querySelector(`.opt[data-k="${v}"]`).classList.add(ok ? "right" : "wrong");
+  } else if (it.type === "tf"){
+    const n = it.rows.filter((r, k) => (v[k] === 1) === r[1]).length; ok = n === it.rows.length;
+    if (!ok) detail = `${n} von ${it.rows.length} Kreuzen stimmen.`;
+  }
+  s.val = v; s.tries++;
+  const g = guardCheck(it, ok, s.tries > 1);
+
+  if (ok){ s.status = s.tries === 1 ? "ok1" : "ok2"; save(); showFinished(true); return; }
+  if (s.tries >= 2){
+    s.status = "shown"; save();
+    if (it.type === "mc" || it.type === "diag") document.querySelector(`.opt[data-k="${it.ans}"]`).classList.add("right");
+    showFinished(false, detail); return;
+  }
+  save();
+  fb("bad", `<p><b>Noch nicht richtig.</b> ${detail}</p><p><b>Tipp:</b> ${it.tip}</p><p class="note">Du hast noch einen Versuch.</p>`);
+  if (g === "soft") $("#slow").classList.add("show");
+  shownAt = Date.now();
+}
+
+function checkText(it, s){
+  const t = ($("#ta").value || "").trim();
+  if (t.length < 40 || looksLikeNonsense(t)){
+    const dt = (Date.now() - shownAt) / 1000;
+    if (t.length >= 10 && looksLikeNonsense(t)){ s.tries = (s.tries || 0) + 1; save(); if (s.tries >= 2 || dt < 15) openGuard("Deine Antwort sieht nicht nach einer echten Begründung aus."); }
+    fb("tip", "<p>Schreib zuerst deine <b>eigene</b> Antwort in ganzen Sätzen (mindestens zwei Sätze). Erst dann siehst du die Musterlösung.</p>");
+    return;
+  }
+  s.val = t; s.revealed = true; save();
+  $("#ta").disabled = true;
+  showFinished();
+}
+
+function showFinished(fresh, detail){
+  const it = ITEMS[S.cur], s = st(it.id);
+  if (it.type === "text"){
+    fb("ok", `<p><b>Musterlösung:</b> ${it.muster}</p><p style="margin-top:10px"><b>Vergleiche:</b> Was steht auch in deiner Antwort?</p>
+      <div class="crit">${it.crit.map((c, k) => `<label><input type="checkbox" data-k="${k}" ${s.self && s.self[k] ? "checked" : ""} ${s.status === "text" ? "disabled" : ""}> ${c}</label>`).join("")}</div>`);
+    if (s.status !== "text"){
+      $("#act").innerHTML = `<button class="btn" id="nx">Fertig – weiter</button>`;
+      $("#nx").onclick = () => { s.self = [...document.querySelectorAll(".crit input")].map(x => x.checked); s.status = "text"; next(); };
+    } else navButtons();
+    return;
+  }
+  // gewählte/gegebene Antwort wieder markieren
+  if (it.type === "mc" || it.type === "diag"){
+    document.querySelector(`.opt[data-k="${it.ans}"]`).classList.add("right");
+    if (s.status === "shown" && s.val != null && s.val !== it.ans){ const w = document.querySelector(`.opt[data-k="${s.val}"]`); if (w) w.classList.add("wrong"); }
+  }
+  if (it.type === "num" && s.status !== "skip") $("#nr").className = "numrow " + (s.status === "shown" ? "isbad" : "isok");
+  if (it.type === "tf") document.querySelectorAll("table.tf tr[data-k]").forEach(tr => { const k = +tr.dataset.k; if (s.val) tr.className = ((s.val[k] === 1) === it.rows[k][1]) ? "right" : "wrong"; });
+  if (s.status === "skip") fb("sol", `<p><b>Übersprungen.</b> So wäre es gegangen:</p><p>${it.why}</p>`);
+  else if (s.status === "shown") fb("sol", `<p><b>Leider nicht richtig.</b> ${detail || ""}</p><p><b>So geht's:</b> ${it.why}</p><p class="note">Schau dir den Rechenweg genau an und schreib ihn ab.</p>`);
+  else fb("ok", `<p><b>${s.status === "ok1" ? "Richtig! 🎉" : "Jetzt stimmt's! 👍"}</b></p><p>${it.why}</p>`);
+  navButtons();
+}
+
+function navButtons(){
+  const last = S.cur === ITEMS.length - 1;
+  const allDone = ITEMS.every(it => isDone(st(it.id)));
+  $("#act").innerHTML = `<button class="btn" id="nx">${last || (S.done && allDone) ? "Zur Übersicht" : "Weiter"}</button>`;
+  $("#nx").onclick = () => next();
+}
+
+function next(){
+  save();
+  const allDone = ITEMS.every(it => isDone(st(it.id)));
+  if (S.cur === ITEMS.length - 1 || (S.done && allDone)){
+    if (allDone){ S.done = true; save(); return showSummary(); }
+    S.cur = ITEMS.findIndex(it => !isDone(st(it.id))); save(); return render();
+  }
+  S.cur++; S.max = Math.max(S.max, S.cur); save(); render();
+}
+
+/* ================= Übersicht ================= */
+const nb = t => t.replace(/(\d) (%|J|kJ)/g, "$1\u00a0$2").replace(/= (\d)/g, "=\u00a0$1");
+const STAT = { ok1:"✅ 1. Versuch", ok2:"✅ 2. Versuch", shown:"❌ Lösung gezeigt", skip:"– übersprungen" };
+function showSummary(){
+  document.body.classList.add("summary");
+  const d = new Date();
+  let rows = "", part = "";
+  ITEMS.forEach(it => {
+    if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.part === "A" ? "Teil A · Formel-Training" : "Teil " + it.unit.id + " · " + it.unit.title}</td></tr>`; }
+    const s = st(it.id);
+    const status = it.type === "text" ? `✍️ selbst geprüft ${(s.self || []).filter(Boolean).length}/${it.crit.length}` : STAT[s.status];
+    rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
+  });
+  const c = k => ITEMS.filter(it => st(it.id).status === k).length;
+  $("#sumCard").innerHTML = `
+    <div class="top"><h2>Wirkungsgrad – meine Übersicht</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
+    <div class="merk"><div class="f">${ETA} = <span class="frac"><span>Nutzenergie</span><span>zugeführte Energie</span></span></div>
+      <div>η hat keine Einheit · als Dezimalzahl oder in % (mal 100)<br>η ist immer <b>kleiner als 100 %</b>, weil immer Energie entwertet wird.</div></div>
+    <table><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Mein Ergebnis</th></tr>${rows}</table>
+    <div class="stats"><span>✅ 1. Versuch: ${c("ok1")}</span><span>✅ 2. Versuch: ${c("ok2")}</span><span>❌ Lösung gezeigt: ${c("shown")}</span><span>– übersprungen: ${c("skip")}</span>
+    <span class="${S.flags ? "warn" : ""}">${S.flags ? "⚠️ Rate-Hinweise: " + S.flags : "Rate-Hinweise: 0 👍"}</span></div>`;
+  fit(); window.scrollTo({top: 0});
+}
+function fit(){
+  const card = $("#sumCard"), box = $("#fitBox");
+  card.style.transform = "none"; box.style.height = "auto";
+  const sc = Math.min(1, (window.innerWidth - 16) / card.offsetWidth, (window.innerHeight - 16) / card.offsetHeight);
+  card.style.transform = `scale(${sc})`;
+  box.style.height = Math.ceil(card.offsetHeight * sc) + "px";
+}
+window.addEventListener("resize", () => { if (document.body.classList.contains("summary")) fit(); });
+$("#backToQuiz").onclick = () => { document.body.classList.remove("summary"); S.cur = 0; save(); start(); };
+
+/* ================= Start ================= */
+function start(){ $("#start").classList.add("hide"); $("#prog").classList.remove("hide"); $("#quiz").classList.remove("hide"); render(); }
+$("#go").onclick = () => { S.started = true; save(); start(); };
+$("#reset").onclick = () => { if (!confirm("Alles löschen und mit neuen Zahlen von vorn beginnen?")) return; try { localStorage.removeItem(KEY); } catch(e){} location.reload(); };
+
+const q = new URLSearchParams(location.search);
+if (q.has("uebersicht") && S.done) showSummary();
+else if (S.started) { if (S.done) showSummary(); else start(); }
+</script>
+</body>
+</html>
