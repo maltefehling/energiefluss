@@ -189,7 +189,7 @@ body.summary #sumView{display:block}
       <li><b>Teil B – Aufgaben wie im Test:</b> Lies zuerst das <b>Material</b> genau, dann die Frage. Rechenaufgaben löst du auf Papier im Fünf-Schritt.</li>
       <li>Rechne auf deinem Blatt oder in OneNote mit. Pro Frage hast du <b>zwei Versuche</b>. Nach dem ersten Fehler bekommst du einen Tipp.</li>
       <li>Fragen mit <span class="lvl"><i class="f"></i><i class="f"></i><i class="f"></i></span> sind für Profis. Du darfst sie überspringen.</li>
-      <li>Am Ende bekommst du eine <b>Übersicht mit allen Fragen und richtigen Antworten</b>. Davon machst du einen Screenshot für dein OneNote.</li>
+      <li>Am Ende bekommst du eine <b>Übersicht der Test-Aufgaben aus Teil B mit den richtigen Antworten</b>. Davon machst du einen Screenshot für dein OneNote.</li>
     </ol>
     <p class="slow show" style="margin-top:12px">Wichtig: Die App merkt, wenn du nur rätst. Dann musst du kurz Pause machen – und es steht in deiner Übersicht.</p>
     <div class="actions"><button class="btn" id="go">Los geht's</button></div>
@@ -200,15 +200,7 @@ body.summary #sumView{display:block}
 
   <section id="sumView">
     <div id="fitBox"><div id="sumCard"></div></div>
-    <div class="sumhelp card">
-      <p style="margin-top:0"><b>So kommt die Übersicht in dein OneNote:</b></p>
-      <ol class="steps">
-        <li>Scrolle ganz nach oben, sodass die Übersicht den Bildschirm füllt.</li>
-        <li>Mach einen Screenshot: obere Taste und Lauter-Taste gleichzeitig drücken.</li>
-        <li>Öffne in OneNote deine Seite „Wirkungsgrad“ und füge das Bild ein (Fotos-App → Teilen → OneNote oder Bild kopieren und einfügen).</li>
-      </ol>
-      <div class="actions"><button class="btn ghost" id="backToQuiz">Aufgaben nochmal ansehen</button></div>
-    </div>
+    <div class="sumhelp"><div class="actions"><button class="btn ghost" id="backToQuiz">Aufgaben nochmal ansehen</button></div></div>
   </section>
 
   <div class="foot">
@@ -735,20 +727,19 @@ const STAT = { ok1:"✅ 1. Versuch", ok2:"✅ 2. Versuch", shown:"❌ Lösung ge
 function showSummary(){
   document.body.classList.add("summary");
   const d = new Date();
+  // Nur die IQB-Aufgaben (Teil B) – die Rechnungen aus Teil A stehen schon auf dem Arbeitsblatt.
+  const IQB = ITEMS.filter(it => it.unit.part === "B");
   let rows = "", part = "";
-  ITEMS.forEach(it => {
-    if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.part === "A" ? "Teil A · Formel-Training" : "Teil " + it.unit.id + " · " + it.unit.title}</td></tr>`; }
+  IQB.forEach(it => {
+    if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.id} · ${it.unit.title}</td></tr>`; }
     const s = st(it.id);
     const status = it.type === "text" ? `✍️ selbst geprüft ${(s.self || []).filter(Boolean).length}/${it.crit.length}` : STAT[s.status];
     rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
   });
-  const c = k => ITEMS.filter(it => st(it.id).status === k).length;
+  const c = k => IQB.filter(it => st(it.id).status === k).length;
   $("#sumCard").innerHTML = `
-    <div class="top"><h2>Wirkungsgrad – meine Übersicht</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
-    <div class="merk"><div class="f">${ETA} = <span class="frac"><span>Nutzenergie</span><span>zugeführte Energie</span></span></div>
-      <div>η hat keine Einheit · als Dezimalzahl oder in % (mal 100)<br>η ist immer <b>kleiner als 100 %</b>, weil immer Energie entwertet wird.</div>
-      <div class="fsline">Fünf-Schritt: ① gegeben ② gesucht ③ Formel ④ Rechnung ⑤ Antwort</div></div>
-    <table><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Mein Ergebnis</th></tr>${rows}</table>
+    <div class="top"><h2>Wirkungsgrad – Aufgaben wie im Test</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
+    <table style="margin-top:8px"><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Mein Ergebnis</th></tr>${rows}</table>
     <div class="stats"><span>✅ 1. Versuch: ${c("ok1")}</span><span>✅ 2. Versuch: ${c("ok2")}</span><span>❌ Lösung gezeigt: ${c("shown")}</span><span>– übersprungen: ${c("skip")}</span>
     <span class="${S.flags ? "warn" : ""}">${S.flags ? "⚠️ Rate-Hinweise: " + S.flags : "Rate-Hinweise: 0 👍"}</span></div>`;
   fit(); window.scrollTo({top: 0});
