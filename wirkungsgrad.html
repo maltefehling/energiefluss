@@ -162,7 +162,9 @@ body.summary #sumView{display:block}
 #sumCard td.nr{font-weight:800;white-space:nowrap;color:var(--muted)}
 #sumCard td.a{font-weight:800;color:var(--green);white-space:nowrap}
 #sumCard td.a.long{white-space:normal;font-weight:700;font-size:13px}
-#sumCard td.s{white-space:nowrap;text-align:center;font-size:13px}
+#sumCard td.s{font-size:12.5px;max-width:190px}
+#sumCard td.s .ok{color:var(--green);font-weight:800}
+#sumCard td.s .bad{color:var(--heat);font-weight:700}
 #sumCard tr.part td{background:#F4F7FB;font-weight:800;color:#1F4E79;font-size:12px;padding:2px 5px}
 #sumCard .stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;font-weight:700}
 #sumCard .stats .warn{color:var(--heat)}
@@ -631,6 +633,7 @@ function check(){
     if (!ok) detail = `${n} von ${it.rows.length} Kreuzen stimmen.`;
   }
   s.val = v; s.tries++;
+  if (!ok) (s.wrong = s.wrong || []).push(keyword(it, v));
   const g = guardCheck(it, ok, s.tries > 1);
 
   if (ok){ s.status = s.tries === 1 ? "ok1" : "ok2"; save(); showFinished(true); return; }
@@ -658,6 +661,16 @@ function checkFive(it, s){
   fb("bad", `<p><b>Noch nicht alles richtig.</b> ${res.filter(Boolean).length} von 5 Schritten stimmen.</p><p>${msg.join("<br>")}</p><p><b>Tipp:</b> ${it.tip}</p><p class="note">Du hast noch einen Versuch. Ändere die Schritte mit ✗.</p>`);
   if (g === "soft") $("#slow").classList.add("show");
   shownAt = Date.now();
+}
+
+/* Stichwort zur falschen Antwort für die Übersicht */
+function short(html, n = 34){ const t = html.replace(/<[^>]+>/g, "").trim(); if (t.length <= n) return t; const c = t.slice(0, n); return c.slice(0, c.lastIndexOf(" ") > 15 ? c.lastIndexOf(" ") : n) + " …"; }
+function keyword(it, v){
+  if (it.type === "num") return `${String(v).trim()}${it.u === "J" && !/J/i.test(String(v)) ? " J" : ""}`; // genau wie eingetippt; nur „J“ ergänzen
+  if (it.type === "mc") return short(it.opts[v]);
+  if (it.type === "diag") return `Diagramm mit ${Math.round(it.vals[v] * 100)} % Licht`;
+  if (it.type === "tf") return v.map(x => x === 1 ? "r" : "f").join(" · ");
+  return "";
 }
 
 function checkText(it, s){
@@ -723,7 +736,13 @@ function next(){
 
 /* ================= Übersicht ================= */
 const nb = t => t.replace(/(\d) (%|J|kJ)/g, "$1\u00a0$2").replace(/= (\d)/g, "=\u00a0$1");
-const STAT = { ok1:"✅ 1. Versuch", ok2:"✅ 2. Versuch", shown:"❌ Lösung gezeigt", skip:"– übersprungen" };
+function mine(it, s){
+  if (it.type === "text") return `✍️ selbst geprüft ${(s.self || []).filter(Boolean).length}/${it.crit.length}`;
+  if (s.status === "skip") return "– übersprungen";
+  if (s.status === "ok1") return `<span class="ok">✓ richtig</span>`;
+  const w = (s.wrong || []).map(x => nb(x.replace(/</g, "&lt;"))).join("<br>");
+  return `<span class="bad">✗ ${w || "falsch"}</span>`;
+}
 function showSummary(){
   document.body.classList.add("summary");
   const d = new Date();
@@ -733,14 +752,14 @@ function showSummary(){
   IQB.forEach(it => {
     if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.id} · ${it.unit.title}</td></tr>`; }
     const s = st(it.id);
-    const status = it.type === "text" ? `✍️ selbst geprüft ${(s.self || []).filter(Boolean).length}/${it.crit.length}` : STAT[s.status];
+    const status = mine(it, s);
     rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
   });
   const c = k => IQB.filter(it => st(it.id).status === k).length;
   $("#sumCard").innerHTML = `
     <div class="top"><h2>Wirkungsgrad – Aufgaben wie im Test</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
-    <table style="margin-top:8px"><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Mein Ergebnis</th></tr>${rows}</table>
-    <div class="stats"><span>✅ 1. Versuch: ${c("ok1")}</span><span>✅ 2. Versuch: ${c("ok2")}</span><span>❌ Lösung gezeigt: ${c("shown")}</span><span>– übersprungen: ${c("skip")}</span>
+    <table style="margin-top:8px"><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Meine Antwort</th></tr>${rows}</table>
+    <div class="stats"><span>✓ sofort richtig: ${c("ok1")} von ${IQB.filter(it => it.type !== "text").length}</span>
     <span class="${S.flags ? "warn" : ""}">${S.flags ? "⚠️ Rate-Hinweise: " + S.flags : "Rate-Hinweise: 0 👍"}</span></div>`;
   fit(); window.scrollTo({top: 0});
 }
