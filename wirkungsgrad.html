@@ -166,6 +166,7 @@ body.summary #sumView{display:block}
 #sumCard td.s .ok{color:var(--green);font-weight:800}
 #sumCard td.s .bad{color:var(--heat);font-weight:700}
 #sumCard tr.part td{background:#F4F7FB;font-weight:800;color:#1F4E79;font-size:12px;padding:2px 5px}
+#sumCard .auftrag{background:#E8F4E6;border:1.5px solid #A9D3A0;border-radius:8px;padding:6px 10px;margin:8px 0;font-size:14px}
 #sumCard .stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;font-weight:700}
 #sumCard .stats .warn{color:var(--heat)}
 .sumhelp{max-width:760px;margin:14px auto 0;font-size:.95rem}
@@ -757,8 +758,9 @@ function showSummary(){
   });
   const c = k => IQB.filter(it => st(it.id).status === k).length;
   $("#sumCard").innerHTML = `
-    <div class="top"><h2>Wirkungsgrad – Aufgaben wie im Test</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
-    <table style="margin-top:8px"><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Meine Antwort</th></tr>${rows}</table>
+    <div class="top"><h2>Wirkungsgrad</h2><div class="note">${d.toLocaleDateString("de-DE")} · Physik Kl. 8</div></div>
+    <div class="auftrag">📸 Mach einen <b>Screenshot</b> von dieser Übersicht und füge ihn in dein <b>Heft in OneNote</b> ein (Arbeitsblatt Seite 4).</div>
+    <table><tr><th>Nr.</th><th>Frage</th><th>Richtige Antwort</th><th>Meine Antwort</th></tr>${rows}</table>
     <div class="stats"><span>✓ sofort richtig: ${c("ok1")} von ${IQB.filter(it => it.type !== "text").length}</span>
     <span class="${S.flags ? "warn" : ""}">${S.flags ? "⚠️ Rate-Hinweise: " + S.flags : "Rate-Hinweise: 0 👍"}</span></div>`;
   fit(); window.scrollTo({top: 0});
