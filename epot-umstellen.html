@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Formel umstellen: E_pot = m · g · h</title>
+<style>
+:root{--ink:#1F2A44;--acc:#1F4E79;--grau:#7F8796;--gruen:#2E9E5B;--orange:#D9822B;--blau:#3B6FB6;--linie:#C9D3E3}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+main{max-width:860px;margin:0 auto;padding:18px 16px 40px}
+h1{color:var(--acc);font-size:26px;margin:0 0 4px;border-bottom:2px solid var(--acc);padding-bottom:4px}
+.unter{color:var(--grau);font-style:italic;margin:0 0 16px;font-size:18px}
+.wahl{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;font-size:20px}
+button{font:inherit;font-size:20px;min-height:48px;padding:8px 18px;border-radius:12px;border:2px solid var(--acc);background:#fff;color:var(--acc);font-weight:700;cursor:pointer}
+button.an{background:var(--acc);color:#fff}
+button:disabled{opacity:.35}
+.buehne{border:1.5px solid var(--linie);border-radius:14px;padding:14px 14px 18px;min-height:380px}
+.zeile{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:30px;font-weight:700;padding:10px 6px;border-radius:10px;opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s,background .4s}
+.zeile.da{opacity:1;transform:none}
+.zeile.alt{opacity:.45}
+.zeile.ziel{background:#E8F4EC}
+.nr{font-size:16px;color:var(--grau);width:28px;flex:0 0 28px;font-weight:600}
+.frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;vertical-align:middle}
+.frac>span:first-child{border-bottom:2.5px solid currentColor;padding:0 6px 2px}
+.frac>span:last-child{padding:2px 6px 0}
+sub{font-size:.6em}
+.E{color:var(--blau)}.ges{color:var(--gruen)}.st{color:var(--orange)}
+.weg{position:relative;display:inline-block}
+.weg::after{content:"";position:absolute;left:-4px;top:52%;height:3px;background:#C0392B;width:0;transition:width .7s .2s;transform:rotate(-14deg)}
+.weg.x::after{width:calc(100% + 8px)}
+.text{font-size:20px;line-height:1.45;margin:14px 4px 0;min-height:60px}
+.text b.ges{color:var(--gruen)}
+.knoepfe{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.tr{display:inline-block;border:1.5px solid var(--grau);border-radius:6px;padding:0 8px;font-size:18px;font-weight:700;margin:0 2px;background:#fafafa}
+.ende{display:none;margin-top:16px;font-size:20px;border-left:5px solid var(--gruen);padding:8px 14px;background:#F6FBF7;border-radius:6px;line-height:1.45}
+.ende.da{display:block}
+@media (max-width:520px){.zeile{font-size:23px;gap:9px}.text{font-size:18px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Formel umstellen</h1>
+  <p class="unter">E<sub>pot</sub> = m · g · h – so bekommst du die gesuchte Größe allein</p>
+
+  <div class="wahl">Was ist gesucht?
+    <button id="bh" class="an" onclick="waehle('h')">die Höhe h</button>
+    <button id="bm" onclick="waehle('m')">die Masse m</button>
+  </div>
+
+  <div class="buehne" id="buehne"></div>
+  <p class="text" id="text"></p>
+
+  <div class="knoepfe">
+    <button id="weiter" class="an" onclick="weiter()">Weiter ▶</button>
+    <button onclick="waehle(ges)">Nochmal</button>
+  </div>
+
+  <div class="ende" id="ende"></div>
+</main>
+<script>
+// Zwei Fälle: h gesucht (m · g stört) oder m gesucht (g · h stört). Jeder Schritt hängt eine Zeile an.
+const E='<span class="E">E<sub>pot</sub></span>';
+const F={
+  h:{g:'h',s:['m','g'],sName:'m · g'},
+  m:{g:'m',s:['g','h'],sName:'g · h'}
+};
+let ges='h',schritt=0;
+const fr=(o,u)=>`<span class="frac"><span>${o}</span><span>${u}</span></span>`;
+function teile(f,weg){ // rechte Seite: m · g · h in der Reihenfolge der Formel, Störer orange, ggf. durchgestrichen
+  return ['m','g','h'].map(v=>v===f.g?`<span class="ges">${v}</span>`:`<span class="st${weg?' weg':''}">${v}</span>`).join(' · ');
+}
+const stoer=(f,weg)=>f.s.map(v=>`<span class="st${weg?' weg':''}">${v}</span>`).join(' · ');
+function schritte(f){
+  return [
+    {z:`${E} = m · g · h`,
+     t:`Gesucht ist <b class="ges">${f.g}</b>. Es soll am Ende <b>allein</b> auf einer Seite stehen.`},
+    {z:`${E} = ${teile(f)}`,
+     t:`Neben <b class="ges">${f.g}</b> stehen noch <b class="st">${f.sName}</b> – mal genommen. Die müssen weg.<br>Das Gegenteil von „mal“ ist <b>„geteilt durch“</b>.`},
+    {z:`${fr(E,'('+stoer(f)+')')} = ${fr(teile(f),'('+stoer(f)+')')}`,
+     t:`Teile <b>beide Seiten</b> durch ( ${f.sName} ). Was du links machst, machst du auch rechts – wie bei einer Waage.`},
+    {z:`${fr(E,'('+stoer(f)+')')} = ${fr(teile(f,true),'('+stoer(f,true)+')')}`,weg:true,
+     t:`Rechts steht jetzt ${f.sName} oben <b>und</b> unten. Das kürzt sich weg (ergibt 1).`},
+    {z:`${fr(E,stoer(f))} = <span class="ges">${f.g}</span>`,
+     t:`Übrig bleibt nur noch <b class="ges">${f.g}</b>.`},
+    {z:`<span class="ges">${f.g}</span> = ${fr(E,stoer(f))}`,ziel:true,
+     t:`Seiten tauschen: Die gesuchte Größe steht vorne. <b>Fertig umgestellt!</b><br>`+
+       `Im Taschenrechner: <span class="tr">E</span> <span class="tr">÷</span> <span class="tr">(</span> <span class="tr">${f.s[0]}</span> <span class="tr">×</span> <span class="tr">${f.s[1]}</span> <span class="tr">)</span> – ⚠ die Klammer nicht vergessen!`}
+  ];
+}
+function zeichne(){
+  const f=F[ges],S=schritte(f),b=document.getElementById('buehne');
+  // Schritt 1 und 2 zeigen dieselbe Zeile (2 färbt nur ein) – deshalb ersetzt 2 die erste Zeile
+  b.innerHTML=S.slice(0,schritt+1).map((s,i)=>({s,i})).filter(o=>!(o.i===0&&schritt>0)).map((o,k,a)=>`<div class="zeile${o.i<schritt?' alt':''}${o.s.ziel&&o.i===schritt?' ziel':''}"><span class="nr">${k+1}</span>${o.s.z}</div>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    b.querySelectorAll('.zeile').forEach(z=>z.classList.add('da'));
+    if(S[schritt].weg) b.querySelectorAll('.zeile:last-child .weg').forEach(w=>w.classList.add('x'));
+    b.querySelectorAll('.zeile.alt .weg').forEach(w=>w.classList.add('x'));
+  }));
+  document.getElementById('text').innerHTML=S[schritt].t;
+  const letzt=schritt===S.length-1;
+  document.getElementById('weiter').disabled=letzt;
+  const e=document.getElementById('ende');
+  e.classList.toggle('da',letzt);
+  e.innerHTML=letzt?`Zurück zum Skript: Schreibe bei <b>③ Formel</b> die umgestellte Formel hin – erst dann Zahlen mit Einheit einsetzen.`+
+    (ges==='h'?`<br>Probier danach auch <b>„die Masse m“</b> oben aus.`:`<br>Probier danach auch <b>„die Höhe h“</b> oben aus.`):'';
+}
+function weiter(){schritt=Math.min(schritt+1,schritte(F[ges]).length-1);zeichne();}
+function waehle(v){ges=v;schritt=0;
+  document.getElementById('bh').classList.toggle('an',v==='h');
+  document.getElementById('bm').classList.toggle('an',v==='m');zeichne();}
+zeichne();
+</script>
+</body>
+</html>
