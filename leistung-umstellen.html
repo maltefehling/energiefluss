@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Formel umstellen: P = E : t</title>
+<style>
+:root{--ink:#1F2A44;--acc:#1F4E79;--grau:#7F8796;--gruen:#2E9E5B;--orange:#D9822B;--blau:#3B6FB6;--linie:#C9D3E3}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+main{max-width:860px;margin:0 auto;padding:18px 16px 40px}
+h1{color:var(--acc);font-size:26px;margin:0 0 4px;border-bottom:2px solid var(--acc);padding-bottom:4px}
+.unter{color:var(--grau);font-style:italic;margin:0 0 16px;font-size:18px}
+.wahl{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;font-size:20px}
+button{font:inherit;font-size:20px;min-height:48px;padding:8px 18px;border-radius:12px;border:2px solid var(--acc);background:#fff;color:var(--acc);font-weight:700;cursor:pointer}
+button.an{background:var(--acc);color:#fff}
+button:disabled{opacity:.35}
+.buehne{border:1.5px solid var(--linie);border-radius:14px;padding:14px 14px 18px;min-height:380px}
+.zeile{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:30px;font-weight:700;padding:10px 6px;border-radius:10px;opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s,background .4s}
+.zeile.da{opacity:1;transform:none}
+.zeile.alt{opacity:.45}
+.zeile.ziel{background:#E8F4EC}
+.nr{font-size:16px;color:var(--grau);width:28px;flex:0 0 28px;font-weight:600}
+.frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;vertical-align:middle}
+.frac>span:first-child{border-bottom:2.5px solid currentColor;padding:0 6px 2px}
+.frac>span:last-child{padding:2px 6px 0}
+sub{font-size:.6em}
+.E{color:var(--blau)}.ges{color:var(--gruen)}.st{color:var(--orange)}
+.weg{position:relative;display:inline-block}
+.weg::after{content:"";position:absolute;left:-4px;top:52%;height:3px;background:#C0392B;width:0;transition:width .7s .2s;transform:rotate(-14deg)}
+.weg.x::after{width:calc(100% + 8px)}
+.text{font-size:20px;line-height:1.45;margin:14px 4px 0;min-height:60px}
+.text b.ges{color:var(--gruen)}
+.knoepfe{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.tr{display:inline-block;border:1.5px solid var(--grau);border-radius:6px;padding:0 8px;font-size:18px;font-weight:700;margin:0 2px;background:#fafafa}
+.ende{display:none;margin-top:16px;font-size:20px;border-left:5px solid var(--gruen);padding:8px 14px;background:#F6FBF7;border-radius:6px;line-height:1.45}
+.ende.da{display:block}
+@media (max-width:520px){.zeile{font-size:23px;gap:9px}.text{font-size:18px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Formel umstellen</h1>
+  <p class="unter">P = E : t – so bekommst du die gesuchte Größe allein</p>
+
+  <div class="wahl">Was ist gesucht?
+    <button id="bE" class="an" onclick="waehle('E')">die Energie E</button>
+    <button id="bt" onclick="waehle('t')">die Zeit t</button>
+  </div>
+
+  <div class="buehne" id="buehne"></div>
+  <p class="text" id="text"></p>
+
+  <div class="knoepfe">
+    <button id="weiter" class="an" onclick="weiter()">Weiter ▶</button>
+    <button onclick="waehle(ges)">Nochmal</button>
+  </div>
+
+  <div class="ende" id="ende"></div>
+</main>
+<script>
+// Zwei Fälle: E gesucht (einmal „mal t“) oder t gesucht (erst „mal t“, dann „geteilt durch P“).
+let ges='E',schritt=0;
+const fr=(o,u)=>`<span class="frac"><span>${o}</span><span>${u}</span></span>`;
+const g=v=>`<span class="ges">${v}</span>`, s=v=>`<span class="st">${v}</span>`, w=v=>`<span class="st weg">${v}</span>`;
+const S={
+ E:[
+  {z:`P = ${fr('E','t')}`, t:`Gesucht ist <b class="ges">E</b>. Es soll am Ende <b>allein</b> auf einer Seite stehen.`},
+  {z:`P = ${fr(g('E'),s('t'))}`, t:`<b class="ges">E</b> wird noch <b class="st">geteilt durch t</b>. Das muss weg.<br>Das Gegenteil von „geteilt durch“ ist <b>„mal“</b>.`},
+  {z:`P · ${s('t')} = ${fr(g('E'),s('t'))} · ${s('t')}`, t:`Nimm <b>beide Seiten mal t</b>. Was du links machst, machst du auch rechts – wie bei einer Waage.`},
+  {z:`P · t = ${fr(g('E'),w('t'))} · ${w('t')}`, weg:true, t:`Rechts wird durch t geteilt und wieder mal t genommen. Das hebt sich auf.`},
+  {z:`P · t = ${g('E')}`, t:`Übrig bleibt nur noch <b class="ges">E</b>.`},
+  {z:`${g('E')} = P · t`, ziel:true, t:`Seiten tauschen: Die gesuchte Größe steht vorne. <b>Fertig umgestellt!</b><br>Im Taschenrechner: <span class="tr">P</span> <span class="tr">×</span> <span class="tr">t</span>`}],
+ t:[
+  {z:`P = ${fr('E','t')}`, t:`Gesucht ist <b class="ges">t</b>. Es steht <b>unten</b> im Bruch. Hol es zuerst nach oben.`},
+  {z:`P = ${fr('E',g('t'))}`, t:`Durch <b class="ges">t</b> wird geteilt. Das Gegenteil von „geteilt durch“ ist <b>„mal“</b>.`},
+  {z:`P · ${g('t')} = ${fr('E',s('t'))} · ${s('t')}`, t:`Nimm <b>beide Seiten mal t</b>. Was du links machst, machst du auch rechts.`},
+  {z:`P · ${g('t')} = ${fr('E',w('t'))} · ${w('t')}`, weg:true, t:`Rechts hebt sich „geteilt durch t“ und „mal t“ auf.`},
+  {z:`${s('P')} · ${g('t')} = E`, t:`Jetzt steht <b class="ges">t</b> oben – aber noch <b class="st">mal P</b>. Das Gegenteil von „mal“ ist <b>„geteilt durch“</b>.`},
+  {z:`${fr(s('P')+' · '+g('t'),s('P'))} = ${fr('E',s('P'))}`, t:`Teile <b>beide Seiten durch P</b>.`},
+  {z:`${fr(w('P')+' · '+g('t'),w('P'))} = ${fr('E','P')}`, weg:true, t:`Links steht P oben <b>und</b> unten. Das kürzt sich weg.`},
+  {z:`${g('t')} = ${fr('E','P')}`, ziel:true, t:`Übrig bleibt <b class="ges">t</b>. <b>Fertig umgestellt!</b><br>Im Taschenrechner: <span class="tr">E</span> <span class="tr">÷</span> <span class="tr">P</span>`}]
+};
+function zeichne(){
+  const L=S[ges],b=document.getElementById('buehne');
+  // Schritt 2 färbt nur die Ausgangsformel ein – er ersetzt deshalb die erste Zeile
+  b.innerHTML=L.slice(0,schritt+1).map((s,i)=>({s,i})).filter(o=>!(o.i===0&&schritt>0)).map((o,k)=>`<div class="zeile${o.i<schritt?' alt':''}${o.s.ziel&&o.i===schritt?' ziel':''}"><span class="nr">${k+1}</span>${o.s.z}</div>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    b.querySelectorAll('.zeile').forEach(z=>z.classList.add('da'));
+    if(L[schritt].weg) b.querySelectorAll('.zeile:last-child .weg').forEach(x=>x.classList.add('x'));
+    b.querySelectorAll('.zeile.alt .weg').forEach(x=>x.classList.add('x'));
+  }));
+  document.getElementById('text').innerHTML=L[schritt].t;
+  const letzt=schritt===L.length-1;
+  document.getElementById('weiter').disabled=letzt;
+  const e=document.getElementById('ende');
+  e.classList.toggle('da',letzt);
+  e.innerHTML=letzt?`Zurück zum Skript: Schreibe bei <b>③ Formel</b> die umgestellte Formel hin – erst dann Zahlen mit Einheit einsetzen.`+
+    (ges==='E'?`<br>Probier danach auch <b>„die Zeit t“</b> oben aus.`:`<br>Probier danach auch <b>„die Energie E“</b> oben aus.`):'';
+}
+function weiter(){schritt=Math.min(schritt+1,S[ges].length-1);zeichne();}
+function waehle(v){ges=v;schritt=0;
+  document.getElementById('bE').classList.toggle('an',v==='E');
+  document.getElementById('bt').classList.toggle('an',v==='t');zeichne();}
+zeichne();
+</script>
+</body>
+</html>
