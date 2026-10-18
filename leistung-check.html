@@ -184,7 +184,7 @@ body.summary #sumView{display:block}
     <h2>So geht's</h2>
     <div class="merk"><div><b>Leistung</b> P</div><div class="f">P = E : t</div><div class="note" style="color:var(--ink)">1 W = 1 J pro Sekunde · beim Hochsteigen: E = m · g · h</div></div>
     <ol class="steps">
-      <li><b>Aufgaben wie im Test:</b> Lies zuerst das <b>Material</b> genau, dann die Frage. Rechenaufgaben löst du auf Papier im <b>Fünf-Schritt</b>.</li>
+      <li><b>Erst auf Papier:</b> Löse die <b>Aufgabe mit Material</b> zuerst in deinem Skript. Hier gibst du deine Antworten zu a) bis f) ein und bekommst sofort eine Rückmeldung.</li>
       <li>Pro Frage hast du <b>zwei Versuche</b>. Nach dem ersten Fehler bekommst du einen Tipp.</li>
       <li>Fragen mit <span class="lvl"><i class="f"></i><i class="f"></i><i class="f"></i></span> sind für Profis. Du darfst sie überspringen.</li>
       <li>Am Ende bekommst du eine <b>Übersicht mit den richtigen Antworten</b>. Davon machst du einen Screenshot für dein OneNote.</li>
@@ -331,7 +331,7 @@ const UNITS = [
   <text x="288" y="178" font-size="13" font-weight="700" fill="#1F2A44" text-anchor="end">Zeit t</text>
   <text x="28" y="172" font-size="12" fill="#5C6780">0</text></svg>`,
    items:[
-   { id:"B2a", lvl:2, comp:"Kommunikation · AFB II", type:"mc",
+   { id:"B2e", lvl:2, comp:"Kommunikation · AFB II", type:"mc",
      q:"Welcher Wasserkocher hat die größere Leistung?",
      opts:["A – seine Gerade ist steiler: Er wandelt in der gleichen Zeit mehr Energie um.",
            "B – seine Gerade ist länger.",
@@ -340,7 +340,7 @@ const UNITS = [
      tip:"Leistung = Energie pro Sekunde. Geh im Diagramm zu einer festen Zeit nach oben: Welcher Kocher hat dort mehr Energie umgewandelt?",
      why:"Zu jeder Zeit hat A mehr Energie umgewandelt als B. Je <b>steiler</b> die Gerade, desto mehr Energie pro Sekunde – desto größer die Leistung.",
      sq:"Welcher Wasserkocher hat die größere Leistung?", sa:"A (steilere Gerade)"},
-   { id:"B2b", lvl:3, comp:"Bewertung · AFB III", type:"text",
+   { id:"B2f", lvl:3, comp:"Bewertung · AFB III", type:"text",
      q:"In einer Werbung steht: „Unser neuer Wasserkocher hat <b>3 000 W</b> statt 2 000 W – damit sparst du Energie!“<br>Beurteile die Werbeaussage.",
      muster:"Die Werbung stimmt so nicht. Die Leistung sagt, wie viel Energie <b>pro Sekunde</b> umgewandelt wird – nicht, wie viel insgesamt. Um 1 Liter Wasser zum Kochen zu bringen, braucht man ungefähr gleich viel Energie. Der 3 000-W-Kocher ist nur <b>schneller</b> fertig (in etwa zwei Dritteln der Zeit). Er spart also Zeit, aber kaum Energie.",
      crit:["Ich sage klar, ob die Werbung stimmt.","Ich erkläre: Leistung = Energie pro Sekunde – mehr Leistung heißt schneller, nicht weniger Energie.","Ich nenne, was der stärkere Kocher wirklich spart: Zeit."],
@@ -441,7 +441,7 @@ function renderProg(){
   ITEMS.forEach((it, i) => {
     
     const s = st(it.id), b = document.createElement("button");
-    b.textContent = it.id.replace(/^B\d/, m => m.slice(1)).replace(/^A/, "");
+    b.textContent = it.id.replace(/^B\d/, "");
     b.title = it.id; b.setAttribute("aria-label", "Aufgabe " + it.id);
     b.className = (i === S.cur ? "cur " : "") + (s.status === "ok1" || s.status === "ok2" || s.status === "text" ? "ok" : s.status === "shown" ? "shown" : s.status === "skip" ? "skip" : "");
     b.disabled = i > S.max;
@@ -458,7 +458,7 @@ function render(){
   let h = `<section class="card">
     <div class="unit"><span>${u.title}</span></div>
     ${u.material ? `<div class="material">${u.material}</div>` : ""}
-    <div class="q">${it.id} ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
+    <div class="q">${it.id.replace(/^B\d/, "")}) ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
   if (it.type === "num"){
     h += `<div class="numrow" id="nr"><input id="inp" inputmode="decimal" autocomplete="off" aria-label="Deine Antwort" ${done ? "disabled" : ""} value="${s.val != null ? String(s.val).replace(/"/g,"") : ""}"><span class="u">${it.u}</span></div>`;
   } else if (it.type === "fuenf"){
@@ -644,7 +644,7 @@ function showSummary(){
     if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.id} · ${it.unit.title}</td></tr>`; }
     const s = st(it.id);
     const status = mine(it, s);
-    rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
+    rows += `<tr><td class="nr">${it.id.replace(/^B\d/, "")})</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
   });
   const c = k => IQB.filter(it => st(it.id).status === k).length;
   $("#sumCard").innerHTML = `

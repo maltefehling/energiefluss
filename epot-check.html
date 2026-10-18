@@ -184,7 +184,7 @@ body.summary #sumView{display:block}
     <h2>So geht's</h2>
     <div class="merk"><div><b>Potenzielle Energie</b> (Lageenergie)</div><div class="f">E<sub>pot</sub> = m · g · h</div><div class="note" style="color:var(--ink)">m Masse in kg · g = 9,81 N/kg · h Höhe in m</div></div>
     <ol class="steps">
-      <li><b>Aufgaben wie im Test:</b> Lies zuerst das <b>Material</b> genau, dann die Frage. Rechenaufgaben löst du auf Papier im <b>Fünf-Schritt</b>.</li>
+      <li><b>Erst auf Papier:</b> Löse die <b>Aufgabe mit Material</b> zuerst in deinem Skript. Hier gibst du deine Antworten zu a) bis f) ein und bekommst sofort eine Rückmeldung.</li>
       <li>Pro Frage hast du <b>zwei Versuche</b>. Nach dem ersten Fehler bekommst du einen Tipp.</li>
       <li>Fragen mit <span class="lvl"><i class="f"></i><i class="f"></i><i class="f"></i></span> sind für Profis. Du darfst sie überspringen.</li>
       <li>Am Ende bekommst du eine <b>Übersicht mit den richtigen Antworten</b>. Davon machst du einen Screenshot für dein OneNote.</li>
@@ -420,7 +420,7 @@ function renderProg(){
   ITEMS.forEach((it, i) => {
     
     const s = st(it.id), b = document.createElement("button");
-    b.textContent = it.id.replace(/^B\d/, m => m.slice(1)).replace(/^A/, "");
+    b.textContent = it.id.replace(/^B\d/, "");
     b.title = it.id; b.setAttribute("aria-label", "Aufgabe " + it.id);
     b.className = (i === S.cur ? "cur " : "") + (s.status === "ok1" || s.status === "ok2" || s.status === "text" ? "ok" : s.status === "shown" ? "shown" : s.status === "skip" ? "skip" : "");
     b.disabled = i > S.max;
@@ -437,7 +437,7 @@ function render(){
   let h = `<section class="card">
     <div class="unit"><span>${u.title}</span></div>
     ${u.material ? `<div class="material">${u.material}</div>` : ""}
-    <div class="q">${it.id} ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
+    <div class="q">${it.id.replace(/^B\d/, "")}) ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
   if (it.type === "num"){
     h += `<div class="numrow" id="nr"><input id="inp" inputmode="decimal" autocomplete="off" aria-label="Deine Antwort" ${done ? "disabled" : ""} value="${s.val != null ? String(s.val).replace(/"/g,"") : ""}"><span class="u">${it.u}</span></div>`;
   } else if (it.type === "fuenf"){
@@ -623,7 +623,7 @@ function showSummary(){
     if (it.unit.id !== part){ part = it.unit.id; rows += `<tr class="part"><td colspan="4">${it.unit.id} · ${it.unit.title}</td></tr>`; }
     const s = st(it.id);
     const status = mine(it, s);
-    rows += `<tr><td class="nr">${it.id}</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
+    rows += `<tr><td class="nr">${it.id.replace(/^B\d/, "")})</td><td>${nb(it.sq.replace(/^[^:]+: /, it.unit.part === "B" ? "" : "$&"))}</td><td class="a ${it.sa.replace(/<[^>]+>/g, "").length > 18 ? "long" : ""}">${nb(it.sa)}</td><td class="s">${status}</td></tr>`;
   });
   const c = k => IQB.filter(it => st(it.id).status === k).length;
   $("#sumCard").innerHTML = `
