@@ -456,7 +456,7 @@ function render(){
   firstLook = !S.seenUnits[u.id]; S.seenUnits[u.id] = true; save();
   shownAt = Date.now();
   let h = `<section class="card">
-    <div class="unit"><span>${u.title}</span><span class="chip">${it.comp}</span></div>
+    <div class="unit"><span>${u.title}</span></div>
     ${u.material ? `<div class="material">${u.material}</div>` : ""}
     <div class="q">${it.id} ${lvlHtml(it.lvl)}<br>${it.q}</div>`;
   if (it.type === "num"){
